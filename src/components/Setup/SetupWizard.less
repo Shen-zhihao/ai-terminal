@@ -1,0 +1,284 @@
+@import '../../index.less';
+
+.setup-wizard {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, @gradient-start 0%, @gradient-via 50%, @gradient-end 100%);
+  display: flex;
+  align-items: center;
+  justify-center;
+  z-index: 50;
+}
+
+.setup-container {
+  max-width: 42rem;
+  width: 100%;
+  margin: 0 1rem;
+}
+
+.setup-header {
+  text-align: center;
+  margin-bottom: 3rem;
+
+  &-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: @text-primary;
+    margin-bottom: 1rem;
+  }
+
+  &-subtitle {
+    font-size: 1.25rem;
+    color: @text-secondary;
+  }
+}
+
+.setup-step-header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  &-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  &-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: @text-primary;
+    margin-bottom: 0.5rem;
+  }
+
+  &-subtitle {
+    color: @text-tertiary;
+  }
+}
+
+.providers {
+  &-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: @text-primary;
+    margin-bottom: 1rem;
+  }
+
+  &-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+.provider-card {
+  width: 100%;
+  padding: 1.5rem;
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid @border-color;
+  border-radius: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(31, 41, 55, 0.7);
+    border-color: @primary;
+
+    .provider-card-name {
+      color: @primary;
+    }
+
+    .provider-card-arrow {
+      color: @primary;
+    }
+  }
+
+  &-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &-icon {
+    font-size: 2.5rem;
+  }
+
+  &-info {
+    flex: 1;
+  }
+
+  &-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: @text-primary;
+    transition: color 0.2s;
+  }
+
+  &-desc {
+    font-size: 0.875rem;
+    color: @text-tertiary;
+    margin-top: 0.25rem;
+  }
+
+  &-arrow {
+    color: @text-tertiary;
+    transition: color 0.2s;
+  }
+}
+
+.config-form {
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid @border-color;
+  border-radius: 0.75rem;
+  padding: 2rem;
+
+  &-field {
+    margin-bottom: 1.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: @text-secondary;
+    margin-bottom: 0.5rem;
+
+    .required {
+      color: @danger;
+    }
+  }
+
+  &-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: @bg-primary;
+    color: @text-primary;
+    border: 1px solid @border-color;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: @primary;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &::placeholder {
+      color: @text-tertiary;
+    }
+  }
+
+  &-input-wrapper {
+    position: relative;
+  }
+
+  &-toggle-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: @text-tertiary;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.2s;
+
+    &:hover {
+      color: @text-primary;
+    }
+  }
+
+  &-hint {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: @text-tertiary;
+  }
+}
+
+.info-box {
+  background: rgba(30, 58, 138, 0.2);
+  border: 1px solid #1e3a8a;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1.5rem;
+
+  &-content {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  &-icon {
+    color: #60a5fa;
+    font-size: 1.25rem;
+  }
+
+  &-text {
+    flex: 1;
+    font-size: 0.875rem;
+    color: #93c5fd;
+
+    &-title {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    &-desc {
+      opacity: 0.9;
+    }
+  }
+}
+
+.config-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &-secondary {
+    background: @bg-tertiary;
+    color: @text-primary;
+
+    &:hover {
+      background: @border-color-hover;
+    }
+  }
+
+  &-primary {
+    flex: 1;
+    background: @primary;
+    color: @text-primary;
+
+    &:hover:not(:disabled) {
+      background: @primary-hover;
+    }
+
+    &:disabled {
+      background: @bg-tertiary;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+}
+
+.setup-footer {
+  text-align: center;
+  margin-top: 2rem;
+  color: @text-tertiary;
+  font-size: 0.875rem;
+}
