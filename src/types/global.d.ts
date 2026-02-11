@@ -1,23 +1,3 @@
-// LESS 模块声明
-declare module '*.less' {
-  const content: { [className: string]: string }
-  export default content
-}
-
-// CSS 模块声明
-declare module '*.css' {
-  const content: { [className: string]: string }
-  export default content
-}
-
-// 图片资源
-declare module '*.png'
-declare module '*.jpg'
-declare module '*.jpeg'
-declare module '*.gif'
-declare module '*.svg'
-declare module '*.webp'
-
 // Electron API
 import type { TerminalOptions, IPCResponse, CommandHistory } from '@shared/types'
 

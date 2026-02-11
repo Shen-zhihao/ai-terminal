@@ -1,57 +1,60 @@
-import { useState, useEffect } from 'react'
-import TerminalView from './components/Terminal/TerminalView'
-import ChatPanel from './components/Chat/ChatPanel'
-import SettingsModal from './components/Settings/SettingsModal'
-import SetupWizard from './components/Setup/SetupWizard'
-import { useSettingsStore } from './stores/settings-store'
-import './App.less'
+import { useState, useEffect } from "react";
+import TerminalView from "./components/Terminal/TerminalView";
+import ChatPanel from "./components/Chat/ChatPanel";
+import SettingsModal from "./components/Settings/SettingsModal";
+import SetupWizard from "./components/Setup/SetupWizard";
+import { useSettingsStore } from "./stores/settings-store";
+import "./App.less";
 
 function App() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [showSetupWizard, setShowSetupWizard] = useState(false)
-  const [isLoadingConfig, setIsLoadingConfig] = useState(true)
-  const [splitRatio, setSplitRatio] = useState(0.6) // 60% 终端, 40% 对话
-  const theme = useSettingsStore((state) => state.theme)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [splitRatio, setSplitRatio] = useState(0.6); // 60% 终端, 40% 对话
+  const theme = useSettingsStore((state) => state.theme);
 
   useEffect(() => {
     // 应用主题
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove("dark");
     }
-  }, [theme])
+  }, [theme]);
 
   // 加载配置
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const response = await window.electronAPI.config.get()
+        const response = await window.electronAPI.config.get();
         if (response.success && response.data) {
-          useSettingsStore.getState().loadConfig(response.data)
+          useSettingsStore.getState().loadConfig(response.data);
 
           // 检查是否已配置 API Key
-          if (!response.data.aiProvider?.apiKey || response.data.aiProvider.apiKey.trim() === '') {
-            setShowSetupWizard(true)
+          if (
+            !response.data.aiProvider?.apiKey ||
+            response.data.aiProvider.apiKey.trim() === ""
+          ) {
+            setShowSetupWizard(true);
           }
         } else {
           // 配置不存在，显示设置向导
-          setShowSetupWizard(true)
+          setShowSetupWizard(true);
         }
       } catch (error) {
-        console.error('加载配置失败:', error)
+        console.error("加载配置失败:", error);
         // 加载失败也显示设置向导
-        setShowSetupWizard(true)
+        setShowSetupWizard(true);
       } finally {
-        setIsLoadingConfig(false)
+        setIsLoadingConfig(false);
       }
-    }
-    loadConfig()
-  }, [])
+    };
+    loadConfig();
+  }, []);
 
   const handleSetupComplete = () => {
-    setShowSetupWizard(false)
-  }
+    setShowSetupWizard(false);
+  };
 
   // 显示加载状态
   if (isLoadingConfig) {
@@ -62,43 +65,43 @@ function App() {
           <div className="loading-text">加载中...</div>
         </div>
       </div>
-    )
+    );
   }
 
   // 显示设置向导
   if (showSetupWizard) {
-    return <SetupWizard onComplete={handleSetupComplete} />
+    return <SetupWizard onComplete={handleSetupComplete} />;
   }
 
   const handleDrag = (e: React.MouseEvent) => {
-    e.preventDefault()
-    const startX = e.clientX
-    const startRatio = splitRatio
+    e.preventDefault();
+    const startX = e.clientX;
+    const startRatio = splitRatio;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const delta = (moveEvent.clientX - startX) / window.innerWidth
-      const newRatio = Math.min(Math.max(startRatio + delta, 0.3), 0.8)
-      setSplitRatio(newRatio)
-    }
+      const delta = (moveEvent.clientX - startX) / window.innerWidth;
+      const newRatio = Math.min(Math.max(startRatio + delta, 0.3), 0.8);
+      setSplitRatio(newRatio);
+    };
 
     const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
 
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  }
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
 
   return (
     <div className="app">
       {/* 顶部工具栏 */}
-      <div className="toolbar">
+      <div
+        className={`toolbar ${window.electronAPI.platform === "darwin" ? "macos" : ""}`}
+      >
         <div className="toolbar-left">
           <h1 className="toolbar-title">AI 终端</h1>
-          <div className="toolbar-platform">
-            {window.electronAPI.platform}
-          </div>
+          <div className="toolbar-platform">{window.electronAPI.platform}</div>
         </div>
 
         <div className="toolbar-actions">
@@ -122,10 +125,7 @@ function App() {
         </div>
 
         {/* 分割线 */}
-        <div
-          className="divider"
-          onMouseDown={handleDrag}
-        />
+        <div className="divider" onMouseDown={handleDrag} />
 
         {/* AI 对话区域 */}
         <div className="chat-area">
@@ -149,7 +149,7 @@ function App() {
         <SettingsModal onClose={() => setIsSettingsOpen(false)} />
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -1,4 +1,4 @@
-@import './index.less';
+@import "./index.less";
 
 .app {
   display: flex;
@@ -38,6 +38,16 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  &.macos {
+    padding-left: 80px;
+    -webkit-app-region: drag;
+
+    .toolbar-actions,
+    .btn-settings {
+      -webkit-app-region: no-drag;
+    }
   }
 }
 
