@@ -88,12 +88,19 @@ export default function TerminalView() {
           addSession(response.data);
           setActiveSession(response.data.id);
           setIsReady(true);
+
+          // 再次调整大小以确保匹配
+          setTimeout(() => {
+            fitAddon.fit();
+          }, 100);
         } else {
           xterm.writeln(`\x1b[31m错误：${response.error}\x1b[0m`);
+          setIsReady(true); // 移除 loading 以便用户看到错误
         }
       } catch (error: any) {
         if (!cancelled) {
           xterm.writeln(`\x1b[31m终端创建失败：${error.message}\x1b[0m`);
+          setIsReady(true); // 移除 loading
         }
       }
     };
@@ -127,13 +134,19 @@ export default function TerminalView() {
 
     // 监听窗口大小变化
     const handleResize = () => {
-      if (fitAddon && sessionIdRef.current) {
-        fitAddon.fit();
-        window.electronAPI.terminal.resize(
-          sessionIdRef.current,
-          xterm.cols,
-          xterm.rows,
-        );
+      if (fitAddonRef.current && sessionIdRef.current) {
+        try {
+          fitAddonRef.current.fit();
+          if (xtermRef.current) {
+            window.electronAPI.terminal.resize(
+              sessionIdRef.current,
+              xtermRef.current.cols,
+              xtermRef.current.rows,
+            );
+          }
+        } catch (e) {
+          console.warn("Resize failed:", e);
+        }
       }
     };
 

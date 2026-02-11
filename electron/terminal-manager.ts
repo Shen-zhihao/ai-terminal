@@ -1,5 +1,6 @@
 import * as pty from 'node-pty'
 import { randomUUID } from 'crypto'
+import * as fs from 'fs'
 import type { TerminalSession, TerminalOptions } from '../shared/types'
 
 type DataCallback = (sessionId: string, data: string) => void
@@ -12,6 +13,31 @@ interface ManagedSession extends TerminalSession {
 export class TerminalManager {
   private sessions: Map<string, ManagedSession> = new Map()
 
+  private getShell(): string {
+    if (process.platform === 'win32') {
+      return process.env.COMSPEC || 'powershell.exe'
+    }
+
+    // List of shells to try in order
+    const shells = [
+      process.env.SHELL,
+      '/bin/zsh',
+      '/usr/bin/zsh',
+      '/bin/bash',
+      '/usr/bin/bash',
+      '/bin/sh'
+    ]
+
+    for (const shell of shells) {
+      if (shell && fs.existsSync(shell)) {
+        return shell
+      }
+    }
+
+    // Fallback
+    return '/bin/sh'
+  }
+
   create(
     options: TerminalOptions = {},
     onData: DataCallback,
@@ -20,51 +46,63 @@ export class TerminalManager {
     const sessionId = randomUUID()
 
     // 确定 shell
-    const shell = options.shell || process.env.SHELL || (process.platform === 'win32' ? 'powershell.exe' : '/bin/bash')
+    const shell = options.shell || this.getShell()
 
     // 确定工作目录
-    const cwd = options.cwd || process.env.HOME || process.cwd()
-
-    // 创建伪终端
-    const ptyProcess = pty.spawn(shell, [], {
-      name: 'xterm-256color',
-      cols: options.cols || 80,
-      rows: options.rows || 24,
-      cwd,
-      env: {
-        ...process.env,
-        ...options.env,
-      } as any,
-    })
-
-    // 监听数据输出
-    ptyProcess.onData((data: string) => {
-      onData(sessionId, data)
-    })
-
-    // 监听进程退出
-    ptyProcess.onExit(({ exitCode }) => {
-      onExit(sessionId, exitCode)
-      this.sessions.delete(sessionId)
-    })
-
-    const session: ManagedSession = {
-      id: sessionId,
-      pid: ptyProcess.pid,
-      createdAt: new Date(),
-      cwd,
-      shell,
-      pty: ptyProcess,
+    let cwd = options.cwd || process.env.HOME || process.cwd()
+    
+    // 验证 cwd 是否存在
+    if (!fs.existsSync(cwd)) {
+      console.warn(`Working directory ${cwd} does not exist, falling back to HOME or /tmp`)
+      cwd = process.env.HOME && fs.existsSync(process.env.HOME) 
+        ? process.env.HOME 
+        : (process.platform === 'win32' ? 'C:\\' : '/tmp')
     }
 
-    this.sessions.set(sessionId, session)
+    try {
+      // 创建伪终端
+      const ptyProcess = pty.spawn(shell, [], {
+        name: 'xterm-256color',
+        cols: options.cols || 80,
+        rows: options.rows || 24,
+        cwd,
+        env: {
+          ...process.env,
+          ...options.env,
+        } as any,
+      })
 
-    return {
-      id: session.id,
-      pid: session.pid,
-      createdAt: session.createdAt,
-      cwd: session.cwd,
-      shell: session.shell,
+      // 监听数据输出
+      ptyProcess.onData((data: string) => {
+        onData(sessionId, data)
+      })
+
+      // 监听进程退出
+      ptyProcess.onExit(({ exitCode }) => {
+        onExit(sessionId, exitCode)
+        this.sessions.delete(sessionId)
+      })
+
+      const session: ManagedSession = {
+        id: sessionId,
+        pid: ptyProcess.pid,
+        createdAt: new Date(),
+        cwd,
+        shell,
+        pty: ptyProcess,
+      }
+
+      this.sessions.set(sessionId, session)
+
+      return {
+        id: session.id,
+        pid: session.pid,
+        createdAt: session.createdAt,
+        cwd: session.cwd,
+        shell: session.shell,
+      }
+    } catch (error: any) {
+      throw new Error(`Failed to spawn terminal (shell: ${shell}, cwd: ${cwd}): ${error.message}`)
     }
   }
 
