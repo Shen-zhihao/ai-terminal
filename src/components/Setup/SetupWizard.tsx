@@ -54,6 +54,31 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
     setStep(2);
   };
 
+  const handleSkipSetup = async () => {
+    setIsLoading(true);
+    try {
+      // 设置空配置表示跳过 AI 配置
+      const emptyConfig: AIProvider = {
+        name: "普通终端",
+        type: "custom", // 使用 custom 类型但不设置有效的 API key
+        apiKey: "",
+        apiBaseUrl: "",
+        modelName: "",
+        temperature: 0.7,
+        maxTokens: 2000,
+      };
+
+      setAIProvider(emptyConfig);
+      setSetupCompleted(true);
+      await saveConfig();
+      onComplete();
+    } catch (error: any) {
+      alert(`保存配置失败: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleComplete = async () => {
     if (!selectedProvider || !apiKey.trim()) {
       alert("请填写所有必填项");
@@ -117,6 +142,22 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                     </div>
                   </button>
                 ))}
+                <button
+                  onClick={handleSkipSetup}
+                  disabled={isLoading}
+                  className="provider-card provider-card-skip"
+                >
+                  <div className="provider-card-content">
+                    <div className="provider-card-icon">⏭️</div>
+                    <div className="provider-card-info">
+                      <h3 className="provider-card-name">跳过配置</h3>
+                      <p className="provider-card-desc">
+                        仅使用普通终端功能，稍后可在设置中启用 AI
+                      </p>
+                    </div>
+                    <div className="provider-card-arrow">→</div>
+                  </div>
+                </button>
               </div>
             </div>
           </div>

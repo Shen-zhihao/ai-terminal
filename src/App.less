@@ -61,6 +61,27 @@
   }
 }
 
+.btn-toggle-chat {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  background: @bg-tertiary;
+  color: @text-primary;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 0.5rem;
+
+  &:hover {
+    background: @border-color-hover;
+  }
+
+  &.active {
+    background: @primary;
+    color: white;
+  }
+}
+
 .main-content {
   flex: 1;
   display: flex;

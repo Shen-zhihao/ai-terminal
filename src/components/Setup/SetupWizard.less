@@ -93,6 +93,20 @@
     }
   }
 
+  &-skip {
+    border-style: dashed;
+    border-color: @text-tertiary;
+
+    &:hover {
+      border-color: @text-secondary;
+      background: rgba(31, 41, 55, 0.6);
+
+      .provider-card-name {
+        color: @text-primary;
+      }
+    }
+  }
+
   &-content {
     display: flex;
     align-items: center;

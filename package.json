@@ -1,6 +1,6 @@
 {
   "name": "ai-terminal",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "AI-powered terminal with natural language command interface",
   "main": "dist-electron/main.js",
   "author": "szh19970123@icloud.com",

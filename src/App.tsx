@@ -11,6 +11,7 @@ function App() {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
   const [splitRatio, setSplitRatio] = useState(0.6); // 60% 终端, 40% 对话
+  const [isChatVisible, setIsChatVisible] = useState(true); // 控制聊天面板显示/隐藏
   const theme = useSettingsStore((state) => state.theme);
 
   useEffect(() => {
@@ -82,6 +83,11 @@ function App() {
     return <SetupWizard onComplete={handleSetupComplete} />;
   }
 
+  // 如果是跳过配置的情况，隐藏聊天面板
+  const aiProvider = useSettingsStore.getState().aiProvider;
+  const isAiConfigured = aiProvider?.apiKey && aiProvider.apiKey.trim() !== "";
+  const shouldShowChat = isChatVisible && isAiConfigured;
+
   const handleDrag = (e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -106,13 +112,23 @@ function App() {
     <div className="app">
       {/* 顶部工具栏 */}
       <div
-        className={`toolbar ${window.electronAPI.platform === "darwin" ? "macos" : ""}`}
+        className={`toolbar ${
+          window.electronAPI.platform === "darwin" ? "macos" : ""
+        }`}
       >
         <div className="toolbar-left">
           <h1 className="toolbar-title">AI终端</h1>
         </div>
 
         <div className="toolbar-actions">
+          {isAiConfigured && (
+            <button
+              onClick={() => setIsChatVisible(!isChatVisible)}
+              className={`btn-toggle-chat ${!isChatVisible ? "active" : ""}`}
+            >
+              💬 {isChatVisible ? "隐藏助手" : "显示助手"}
+            </button>
+          )}
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="btn-settings"
@@ -127,18 +143,20 @@ function App() {
         {/* 终端区域 */}
         <div
           className="terminal-area"
-          style={{ width: `${splitRatio * 100}%` }}
+          style={{ width: isChatVisible ? `${splitRatio * 100}%` : "100%" }}
         >
           <TerminalArea />
         </div>
 
-        {/* 分割线 */}
-        <div className="divider" onMouseDown={handleDrag} />
-
-        {/* AI 对话区域 */}
-        <div className="chat-area">
-          <ChatPanel />
-        </div>
+        {/* 分割线和聊天区域 - 仅在聊天可见且已配置 AI 时显示 */}
+        {shouldShowChat && (
+          <>
+            <div className="divider" onMouseDown={handleDrag} />
+            <div className="chat-area">
+              <ChatPanel />
+            </div>
+          </>
+        )}
       </div>
 
       {/* 底部状态栏 */}
