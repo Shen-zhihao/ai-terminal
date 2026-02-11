@@ -1,6 +1,6 @@
 {
   "name": "ai-terminal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI-powered terminal with natural language command interface",
   "main": "dist-electron/main.js",
   "author": "szh19970123@icloud.com",
@@ -24,7 +24,6 @@
     "ai",
     "shell"
   ],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
@@ -72,6 +71,7 @@
       "dist-electron/**/*"
     ],
     "mac": {
+      "identity": null,
       "category": "public.app-category.developer-tools",
       "target": [
         "dmg"
