@@ -115,9 +115,7 @@ function createMenu() {
         {
           label: "了解更多",
           click: async () => {
-            await shell.openExternal(
-              "https://github.com/shenzhihao/ai-terminal",
-            );
+            await shell.openExternal("https://github.com/Shen-zhihao");
           },
         },
       ],
