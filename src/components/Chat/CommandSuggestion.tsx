@@ -1,6 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { CommandSuggestion as CommandSuggestionType } from '@shared/types'
 import { useTerminalStore } from '../../stores/terminal-store'
+
+const RISK_LABELS: Record<string, string> = {
+  safe: '安全',
+  warning: '警告',
+  dangerous: '危险',
+}
 
 interface CommandSuggestionProps {
   suggestion: CommandSuggestionType
@@ -10,6 +16,7 @@ export default function CommandSuggestion({ suggestion }: CommandSuggestionProps
   const [isEditing, setIsEditing] = useState(false)
   const [editedCommand, setEditedCommand] = useState(suggestion.command)
   const activeSessionId = useTerminalStore((state) => state.activeSessionId)
+  const hasAutoExecuted = useRef(false)
 
   const getRiskIcon = (risk: string) => {
     switch (risk) {
@@ -21,12 +28,12 @@ export default function CommandSuggestion({ suggestion }: CommandSuggestionProps
 
   const handleExecute = async () => {
     if (!activeSessionId) {
-      alert('No active terminal session')
+      alert('没有活跃的终端会话')
       return
     }
 
     const confirmed = suggestion.riskLevel === 'dangerous'
-      ? window.confirm(`This command is potentially dangerous:\n\n${editedCommand}\n\nAre you sure you want to execute it?`)
+      ? window.confirm(`此命令可能存在危险：\n\n${editedCommand}\n\n确定要执行吗？`)
       : true
 
     if (confirmed) {
@@ -35,11 +42,18 @@ export default function CommandSuggestion({ suggestion }: CommandSuggestionProps
     }
   }
 
+  useEffect(() => {
+    if (!hasAutoExecuted.current && activeSessionId && suggestion.riskLevel !== 'dangerous') {
+      hasAutoExecuted.current = true
+      handleExecute()
+    }
+  }, [activeSessionId])
+
   return (
     <div className={`cmd-suggestion cmd-suggestion-${suggestion.riskLevel}`}>
       <div className="cmd-suggestion-header">
         <span className="cmd-suggestion-risk">
-          {getRiskIcon(suggestion.riskLevel)} {suggestion.riskLevel}
+          {getRiskIcon(suggestion.riskLevel)} {RISK_LABELS[suggestion.riskLevel] || suggestion.riskLevel}
         </span>
         {suggestion.tags && suggestion.tags.length > 0 && (
           <div className="cmd-suggestion-tags">
@@ -68,13 +82,13 @@ export default function CommandSuggestion({ suggestion }: CommandSuggestionProps
 
       <div className="cmd-suggestion-actions">
         <button onClick={handleExecute} className="cmd-suggestion-btn">
-          ▶ Execute
+          ▶ 执行
         </button>
         <button onClick={() => setIsEditing(!isEditing)} className="cmd-suggestion-btn">
-          ✏️ {isEditing ? 'Done' : 'Edit'}
+          ✏️ {isEditing ? '完成' : '编辑'}
         </button>
         <button onClick={() => navigator.clipboard.writeText(editedCommand)} className="cmd-suggestion-btn">
-          📋 Copy
+          📋 复制
         </button>
       </div>
     </div>

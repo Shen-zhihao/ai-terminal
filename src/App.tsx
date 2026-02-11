@@ -10,7 +10,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [showSetupWizard, setShowSetupWizard] = useState(false)
   const [isLoadingConfig, setIsLoadingConfig] = useState(true)
-  const [splitRatio, setSplitRatio] = useState(0.6) // 60% terminal, 40% chat
+  const [splitRatio, setSplitRatio] = useState(0.6) // 60% 终端, 40% 对话
   const theme = useSettingsStore((state) => state.theme)
 
   useEffect(() => {
@@ -39,7 +39,7 @@ function App() {
           setShowSetupWizard(true)
         }
       } catch (error) {
-        console.error('Failed to load config:', error)
+        console.error('加载配置失败:', error)
         // 加载失败也显示设置向导
         setShowSetupWizard(true)
       } finally {
@@ -95,7 +95,7 @@ function App() {
       {/* 顶部工具栏 */}
       <div className="toolbar">
         <div className="toolbar-left">
-          <h1 className="toolbar-title">AI Terminal</h1>
+          <h1 className="toolbar-title">AI 终端</h1>
           <div className="toolbar-platform">
             {window.electronAPI.platform}
           </div>
@@ -106,7 +106,7 @@ function App() {
             onClick={() => setIsSettingsOpen(true)}
             className="btn-settings"
           >
-            ⚙️ Settings
+            ⚙️ 设置
           </button>
         </div>
       </div>
@@ -136,11 +136,11 @@ function App() {
       {/* 底部状态栏 */}
       <div className="statusbar">
         <div className="statusbar-left">
-          <span>Ready</span>
+          <span>就绪</span>
         </div>
         <div className="statusbar-right">
           <span>AI: {useSettingsStore.getState().aiProvider.name}</span>
-          <span>Ctrl+K: Command</span>
+          <span>Ctrl+K: 命令</span>
         </div>
       </div>
 

@@ -9,19 +9,19 @@ export default function ApiConfig() {
   return (
     <>
       <div className="form-group">
-        <label>Provider Type</label>
+        <label>服务商类型</label>
         <select
           value={aiProvider.type}
           onChange={(e) => setAIProvider({ type: e.target.value as any })}
         >
-          <option value="openai">OpenAI Compatible</option>
+          <option value="openai">OpenAI 兼容</option>
           <option value="deepseek">DeepSeek</option>
-          <option value="custom">Custom</option>
+          <option value="custom">自定义</option>
         </select>
       </div>
 
       <div className="form-group">
-        <label>API Base URL</label>
+        <label>API 地址</label>
         <input
           type="text"
           value={aiProvider.apiBaseUrl}
@@ -35,7 +35,7 @@ export default function ApiConfig() {
       </div>
 
       <div className="form-group">
-        <label>API Key</label>
+        <label>API 密钥</label>
         <div className="form-group-input-wrapper">
           <input
             type={showApiKey ? 'text' : 'password'}
@@ -54,7 +54,7 @@ export default function ApiConfig() {
       </div>
 
       <div className="form-group">
-        <label>Model Name</label>
+        <label>模型名称</label>
         <input
           type="text"
           value={aiProvider.modelName}
@@ -65,7 +65,7 @@ export default function ApiConfig() {
 
       <div className="form-group-row">
         <div className="form-group">
-          <label>Temperature</label>
+          <label>温度</label>
           <input
             type="number"
             min="0"
@@ -77,7 +77,7 @@ export default function ApiConfig() {
         </div>
 
         <div className="form-group">
-          <label>Max Tokens</label>
+          <label>最大 Token 数</label>
           <input
             type="number"
             min="100"
@@ -90,7 +90,7 @@ export default function ApiConfig() {
       </div>
 
       <div className="form-tip">
-        <p>💡 Tip: Your API key is encrypted and stored securely in your local configuration file.</p>
+        <p>💡 提示：你的 API 密钥已加密存储在本地配置文件中，不会上传到任何服务器。</p>
       </div>
     </>
   )

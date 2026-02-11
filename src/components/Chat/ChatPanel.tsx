@@ -37,21 +37,21 @@ export default function ChatPanel() {
     try {
       const aiService = getAIService(aiProvider)
 
-      if (userMessage.toLowerCase().includes('explain') || userMessage.toLowerCase().includes('what does')) {
+      if (userMessage.toLowerCase().includes('explain') || userMessage.toLowerCase().includes('what does') || userMessage.includes('解释') || userMessage.includes('什么意思')) {
         const command = extractCommand(userMessage)
         if (command) {
           const explanation = await aiService.explainCommand(command)
           addMessage({ role: 'assistant', content: explanation })
         } else {
-          addMessage({ role: 'assistant', content: 'Please provide a command to explain.' })
+          addMessage({ role: 'assistant', content: '请提供要解释的命令。' })
         }
       } else {
         const suggestion = await aiService.generateCommand(userMessage)
-        addMessage({ role: 'assistant', content: `I'll generate a command for you:`, suggestion })
+        addMessage({ role: 'assistant', content: '已为你生成命令：', suggestion })
       }
     } catch (error: any) {
       setError(error.message)
-      addMessage({ role: 'assistant', content: `Error: ${error.message}` })
+      addMessage({ role: 'assistant', content: `错误：${error.message}` })
     } finally {
       setLoading(false)
     }
@@ -65,20 +65,20 @@ export default function ChatPanel() {
   return (
     <div className="chat-panel">
       <div className="chat-header">
-        <h2>AI Assistant</h2>
+        <h2>AI 助手</h2>
       </div>
 
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-messages-empty">
             <div className="chat-messages-empty-content">
-              <p>Hi! I'm your AI terminal assistant.</p>
-              <p>Ask me to generate commands or explain them!</p>
+              <p>你好！我是你的 AI 终端助手。</p>
+              <p>告诉我你想执行什么操作，我来帮你生成命令！</p>
               <div className="chat-messages-empty-content-examples">
-                <p>Examples:</p>
-                <p>"Find all files larger than 100MB"</p>
-                <p>"Explain: find . -name '*.log'"</p>
-                <p>"Delete all node_modules folders"</p>
+                <p>示例：</p>
+                <p>"查找所有大于 100MB 的文件"</p>
+                <p>"解释：find . -name '*.log'"</p>
+                <p>"删除所有 node_modules 文件夹"</p>
               </div>
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function ChatPanel() {
         {isLoading && (
           <div className="chat-loading">
             <div className="chat-loading-dot">●</div>
-            <span>AI is thinking...</span>
+            <span>AI 思考中...</span>
           </div>
         )}
       </div>
@@ -112,11 +112,11 @@ export default function ChatPanel() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything..."
+            placeholder="输入你想执行的操作..."
             disabled={isLoading}
           />
           <button type="submit" disabled={!input.trim() || isLoading}>
-            Send
+            发送
           </button>
         </form>
       </div>

@@ -27,7 +27,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       await saveConfig()
       onClose()
     } catch (error: any) {
-      alert(`Failed to save settings: ${error.message}`)
+      alert(`保存设置失败：${error.message}`)
     } finally {
       setIsSaving(false)
     }
@@ -37,7 +37,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     <div className="settings-modal">
       <div className="settings-container">
         <div className="settings-header">
-          <h2>Settings</h2>
+          <h2>设置</h2>
           <button onClick={onClose}>✕</button>
         </div>
 
@@ -46,19 +46,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             onClick={() => setActiveTab('ai')}
             className={activeTab === 'ai' ? 'active' : ''}
           >
-            AI Model
+            AI 模型
           </button>
           <button
             onClick={() => setActiveTab('terminal')}
             className={activeTab === 'terminal' ? 'active' : ''}
           >
-            Terminal
+            终端
           </button>
           <button
             onClick={() => setActiveTab('features')}
             className={activeTab === 'features' ? 'active' : ''}
           >
-            Features
+            功能
           </button>
         </div>
 
@@ -67,7 +67,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
           {activeTab === 'terminal' && (
             <div className="form-group">
-              <label>Font Size</label>
+              <label>字体大小</label>
               <input
                 type="range"
                 min="10"
@@ -88,8 +88,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   onChange={(e) => setFeature('autoErrorDiagnosis', e.target.checked)}
                 />
                 <div className="checkbox-label">
-                  <div className="checkbox-label-title">Auto Error Diagnosis</div>
-                  <div className="checkbox-label-desc">Automatically analyze and suggest fixes for failed commands</div>
+                  <div className="checkbox-label-title">自动错误诊断</div>
+                  <div className="checkbox-label-desc">自动分析失败的命令并给出修复建议</div>
                 </div>
               </label>
 
@@ -100,8 +100,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   onChange={(e) => setFeature('commandRiskWarning', e.target.checked)}
                 />
                 <div className="checkbox-label">
-                  <div className="checkbox-label-title">Command Risk Warning</div>
-                  <div className="checkbox-label-desc">Warn about potentially dangerous commands</div>
+                  <div className="checkbox-label-title">命令风险警告</div>
+                  <div className="checkbox-label-desc">对潜在危险命令进行警告提示</div>
                 </div>
               </label>
 
@@ -112,8 +112,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   onChange={(e) => setFeature('autoSaveHistory', e.target.checked)}
                 />
                 <div className="checkbox-label">
-                  <div className="checkbox-label-title">Auto Save History</div>
-                  <div className="checkbox-label-desc">Automatically save command history</div>
+                  <div className="checkbox-label-title">自动保存历史</div>
+                  <div className="checkbox-label-desc">自动保存命令执行历史记录</div>
                 </div>
               </label>
             </>
@@ -121,9 +121,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
 
         <div className="settings-footer">
-          <button className="btn-cancel" onClick={onClose}>Cancel</button>
+          <button className="btn-cancel" onClick={onClose}>取消</button>
           <button className="btn-save" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? '保存中...' : '保存设置'}
           </button>
         </div>
       </div>

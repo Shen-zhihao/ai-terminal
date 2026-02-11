@@ -62,6 +62,9 @@ export default function TerminalView() {
     xtermRef.current = xterm
     fitAddonRef.current = fitAddon
 
+    // 用于处理 StrictMode 双重挂载
+    let cancelled = false
+
     // 创建终端会话
     const createSession = async () => {
       try {
@@ -70,15 +73,25 @@ export default function TerminalView() {
           rows: xterm.rows,
         })
 
+        if (cancelled) {
+          // StrictMode cleanup 已执行，销毁刚创建的 session
+          if (response.success && response.data) {
+            window.electronAPI.terminal.destroy(response.data.id)
+          }
+          return
+        }
+
         if (response.success && response.data) {
           sessionIdRef.current = response.data.id
           addSession(response.data)
           setIsReady(true)
         } else {
-          xterm.writeln(`\x1b[31mError: ${response.error}\x1b[0m`)
+          xterm.writeln(`\x1b[31m错误：${response.error}\x1b[0m`)
         }
       } catch (error: any) {
-        xterm.writeln(`\x1b[31mFailed to create terminal: ${error.message}\x1b[0m`)
+        if (!cancelled) {
+          xterm.writeln(`\x1b[31m终端创建失败：${error.message}\x1b[0m`)
+        }
       }
     }
 
@@ -101,7 +114,7 @@ export default function TerminalView() {
     // 监听终端退出
     const unsubscribeExit = window.electronAPI.terminal.onExit((sessionId, exitCode) => {
       if (sessionId === sessionIdRef.current) {
-        xterm.writeln(`\n\x1b[33mProcess exited with code ${exitCode}\x1b[0m`)
+        xterm.writeln(`\n\x1b[33m进程已退出，退出码：${exitCode}\x1b[0m`)
       }
     })
 
@@ -121,6 +134,7 @@ export default function TerminalView() {
 
     // 清理
     return () => {
+      cancelled = true
       disposable.dispose()
       unsubscribeData()
       unsubscribeExit()
@@ -128,6 +142,7 @@ export default function TerminalView() {
 
       if (sessionIdRef.current) {
         window.electronAPI.terminal.destroy(sessionIdRef.current)
+        sessionIdRef.current = null
       }
 
       xterm.dispose()
@@ -149,7 +164,7 @@ export default function TerminalView() {
         {!isReady && (
           <div className="terminal-loading">
             <div className="terminal-loading-text pulse">
-              Initializing terminal...
+              正在初始化终端...
             </div>
           </div>
         )}
