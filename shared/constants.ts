@@ -7,6 +7,10 @@ export const IPC_CHANNELS = {
   TERMINAL_DESTROY: "terminal:destroy",
   TERMINAL_DATA: "terminal:data",
   TERMINAL_EXIT: "terminal:exit",
+  SHELL_NEW_TAB: "shell:new-tab",
+  SHELL_NEW_WINDOW: "shell:new-window",
+  SHELL_SPLIT_VERTICAL: "shell:split-vertical",
+  SHELL_SPLIT_HORIZONTAL: "shell:split-horizontal",
 
   // 配置操作
   CONFIG_GET: "config:get",

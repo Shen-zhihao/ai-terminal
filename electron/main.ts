@@ -1,4 +1,11 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  shell,
+  webContents,
+} from "electron";
 import path from "path";
 import { TerminalManager } from "./terminal-manager";
 import { ConfigManager } from "./config-manager";
@@ -11,8 +18,30 @@ import type { IPCResponse, TerminalOptions } from "../shared/types";
 let mainWindow: BrowserWindow | null = null;
 let terminalManager: TerminalManager | null = null;
 let configManager: ConfigManager | null = null;
+const windows = new Map<number, BrowserWindow>();
+const sessionOwnerMap = new Map<string, number>();
+let lastActiveWindowId: number | null = null;
 
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
+
+function getActiveWindow() {
+  return (
+    BrowserWindow.getFocusedWindow() ||
+    (lastActiveWindowId ? windows.get(lastActiveWindowId) || null : null)
+  );
+}
+
+function cleanupSessionsByWebContentsId(ownerId: number) {
+  if (!terminalManager) return;
+  const sessionIds = Array.from(sessionOwnerMap.entries())
+    .filter(([, id]) => id === ownerId)
+    .map(([sessionId]) => sessionId);
+
+  sessionIds.forEach((sessionId) => {
+    terminalManager?.destroy(sessionId);
+    sessionOwnerMap.delete(sessionId);
+  });
+}
 
 function createMenu() {
   const isMac = process.platform === "darwin";
@@ -84,6 +113,43 @@ function createMenu() {
         { label: "切换全屏", role: "togglefullscreen" },
       ],
     },
+    {
+      label: "Shell",
+      submenu: [
+        {
+          label: "新建窗口",
+          accelerator: "CmdOrCtrl+N",
+          click: () => {
+            void createWindow();
+          },
+        },
+        {
+          label: "新建标签页",
+          accelerator: "CmdOrCtrl+T",
+          click: () => {
+            const targetWindow = getActiveWindow();
+            targetWindow?.webContents.send(IPC_CHANNELS.SHELL_NEW_TAB);
+          },
+        },
+        { type: "separator" },
+        {
+          label: "垂直分屏",
+          accelerator: "CmdOrCtrl+D",
+          click: () => {
+            const targetWindow = getActiveWindow();
+            targetWindow?.webContents.send(IPC_CHANNELS.SHELL_SPLIT_VERTICAL);
+          },
+        },
+        {
+          label: "水平分屏",
+          accelerator: "CmdOrCtrl+Shift+D",
+          click: () => {
+            const targetWindow = getActiveWindow();
+            targetWindow?.webContents.send(IPC_CHANNELS.SHELL_SPLIT_HORIZONTAL);
+          },
+        },
+      ],
+    },
     // 窗口菜单
     {
       label: "窗口",
@@ -119,7 +185,7 @@ function createMenu() {
 }
 
 async function createWindow() {
-  mainWindow = new BrowserWindow({
+  const browserWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 800,
@@ -136,15 +202,25 @@ async function createWindow() {
 
   // 加载应用
   if (isDev) {
-    await mainWindow.loadURL("http://localhost:5173");
-    mainWindow.webContents.openDevTools();
+    await browserWindow.loadURL("http://localhost:5173");
+    browserWindow.webContents.openDevTools();
   } else {
-    await mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    await browserWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 
-  mainWindow.on("closed", () => {
-    mainWindow = null;
-    terminalManager?.destroyAll();
+  windows.set(browserWindow.id, browserWindow);
+  mainWindow = browserWindow;
+
+  browserWindow.on("focus", () => {
+    lastActiveWindowId = browserWindow.id;
+  });
+
+  browserWindow.on("closed", () => {
+    if (mainWindow === browserWindow) {
+      mainWindow = null;
+    }
+    windows.delete(browserWindow.id);
+    cleanupSessionsByWebContentsId(browserWindow.webContents.id);
   });
 }
 
@@ -152,29 +228,28 @@ function setupIPC() {
   // 终端操作
   ipcMain.handle(
     IPC_CHANNELS.TERMINAL_CREATE,
-    async (_, options: TerminalOptions): Promise<IPCResponse> => {
+    async (event, options: TerminalOptions): Promise<IPCResponse> => {
       try {
         if (!terminalManager)
           throw new Error("Terminal manager not initialized");
 
+        const senderId = event.sender.id;
         const session = terminalManager.create(
           options,
           (sessionId, data) => {
-            mainWindow?.webContents.send(
-              IPC_CHANNELS.TERMINAL_DATA,
-              sessionId,
-              data,
-            );
+            const ownerId = sessionOwnerMap.get(sessionId);
+            const target = ownerId ? webContents.fromId(ownerId) : null;
+            target?.send(IPC_CHANNELS.TERMINAL_DATA, sessionId, data);
           },
           (sessionId, exitCode) => {
-            mainWindow?.webContents.send(
-              IPC_CHANNELS.TERMINAL_EXIT,
-              sessionId,
-              exitCode,
-            );
+            const ownerId = sessionOwnerMap.get(sessionId);
+            const target = ownerId ? webContents.fromId(ownerId) : null;
+            target?.send(IPC_CHANNELS.TERMINAL_EXIT, sessionId, exitCode);
+            sessionOwnerMap.delete(sessionId);
           },
         );
 
+        sessionOwnerMap.set(session.id, senderId);
         return { success: true, data: session };
       } catch (error: any) {
         return { success: false, error: error.message };
@@ -222,6 +297,19 @@ function setupIPC() {
         if (!terminalManager)
           throw new Error("Terminal manager not initialized");
         terminalManager.destroy(sessionId);
+        sessionOwnerMap.delete(sessionId);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SHELL_NEW_WINDOW,
+    async (): Promise<IPCResponse> => {
+      try {
+        await createWindow();
         return { success: true };
       } catch (error: any) {
         return { success: false, error: error.message };

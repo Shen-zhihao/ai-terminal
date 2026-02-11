@@ -1,9 +1,13 @@
-import { contextBridge, ipcRenderer } from 'electron'
-import { IPC_CHANNELS } from '../shared/constants'
-import type { TerminalOptions, IPCResponse, CommandHistory } from '../shared/types'
+import { contextBridge, ipcRenderer } from "electron";
+import { IPC_CHANNELS } from "../shared/constants";
+import type {
+  TerminalOptions,
+  IPCResponse,
+  CommandHistory,
+} from "../shared/types";
 
 // 暴露 Electron API 到渲染进程
-contextBridge.exposeInMainWorld('electronAPI', {
+contextBridge.exposeInMainWorld("electronAPI", {
   // 终端操作
   terminal: {
     create: (options?: TerminalOptions): Promise<IPCResponse> =>
@@ -12,22 +16,56 @@ contextBridge.exposeInMainWorld('electronAPI', {
     write: (sessionId: string, data: string): Promise<IPCResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_WRITE, sessionId, data),
 
-    resize: (sessionId: string, cols: number, rows: number): Promise<IPCResponse> =>
+    resize: (
+      sessionId: string,
+      cols: number,
+      rows: number,
+    ): Promise<IPCResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_RESIZE, sessionId, cols, rows),
 
     destroy: (sessionId: string): Promise<IPCResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_DESTROY, sessionId),
 
     onData: (callback: (sessionId: string, data: string) => void) => {
-      const handler = (_: any, sessionId: string, data: string) => callback(sessionId, data)
-      ipcRenderer.on(IPC_CHANNELS.TERMINAL_DATA, handler)
-      return () => ipcRenderer.removeListener(IPC_CHANNELS.TERMINAL_DATA, handler)
+      const handler = (_: any, sessionId: string, data: string) =>
+        callback(sessionId, data);
+      ipcRenderer.on(IPC_CHANNELS.TERMINAL_DATA, handler);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.TERMINAL_DATA, handler);
     },
 
     onExit: (callback: (sessionId: string, exitCode: number) => void) => {
-      const handler = (_: any, sessionId: string, exitCode: number) => callback(sessionId, exitCode)
-      ipcRenderer.on(IPC_CHANNELS.TERMINAL_EXIT, handler)
-      return () => ipcRenderer.removeListener(IPC_CHANNELS.TERMINAL_EXIT, handler)
+      const handler = (_: any, sessionId: string, exitCode: number) =>
+        callback(sessionId, exitCode);
+      ipcRenderer.on(IPC_CHANNELS.TERMINAL_EXIT, handler);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.TERMINAL_EXIT, handler);
+    },
+  },
+
+  shell: {
+    openNewWindow: (): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SHELL_NEW_WINDOW),
+    onNewTab: (callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on(IPC_CHANNELS.SHELL_NEW_TAB, handler);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.SHELL_NEW_TAB, handler);
+    },
+    onSplitVertical: (callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on(IPC_CHANNELS.SHELL_SPLIT_VERTICAL, handler);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.SHELL_SPLIT_VERTICAL, handler);
+    },
+    onSplitHorizontal: (callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on(IPC_CHANNELS.SHELL_SPLIT_HORIZONTAL, handler);
+      return () =>
+        ipcRenderer.removeListener(
+          IPC_CHANNELS.SHELL_SPLIT_HORIZONTAL,
+          handler,
+        );
     },
   },
 
@@ -63,35 +101,49 @@ contextBridge.exposeInMainWorld('electronAPI', {
     HOME: process.env.HOME,
     SHELL: process.env.SHELL,
   },
-})
+});
 
 // 类型声明（用于 TypeScript）
 declare global {
   interface Window {
     electronAPI: {
       terminal: {
-        create: (options?: TerminalOptions) => Promise<IPCResponse>
-        write: (sessionId: string, data: string) => Promise<IPCResponse>
-        resize: (sessionId: string, cols: number, rows: number) => Promise<IPCResponse>
-        destroy: (sessionId: string) => Promise<IPCResponse>
-        onData: (callback: (sessionId: string, data: string) => void) => () => void
-        onExit: (callback: (sessionId: string, exitCode: number) => void) => () => void
-      }
+        create: (options?: TerminalOptions) => Promise<IPCResponse>;
+        write: (sessionId: string, data: string) => Promise<IPCResponse>;
+        resize: (
+          sessionId: string,
+          cols: number,
+          rows: number,
+        ) => Promise<IPCResponse>;
+        destroy: (sessionId: string) => Promise<IPCResponse>;
+        onData: (
+          callback: (sessionId: string, data: string) => void,
+        ) => () => void;
+        onExit: (
+          callback: (sessionId: string, exitCode: number) => void,
+        ) => () => void;
+      };
       config: {
-        get: () => Promise<IPCResponse>
-        set: (config: any) => Promise<IPCResponse>
-        reset: () => Promise<IPCResponse>
-      }
+        get: () => Promise<IPCResponse>;
+        set: (config: any) => Promise<IPCResponse>;
+        reset: () => Promise<IPCResponse>;
+      };
       history: {
-        get: () => Promise<IPCResponse<CommandHistory[]>>
-        add: (entry: CommandHistory) => Promise<IPCResponse>
-        clear: () => Promise<IPCResponse>
-      }
-      platform: string
+        get: () => Promise<IPCResponse<CommandHistory[]>>;
+        add: (entry: CommandHistory) => Promise<IPCResponse>;
+        clear: () => Promise<IPCResponse>;
+      };
+      shell: {
+        openNewWindow: () => Promise<IPCResponse>;
+        onNewTab: (callback: () => void) => () => void;
+        onSplitVertical: (callback: () => void) => () => void;
+        onSplitHorizontal: (callback: () => void) => () => void;
+      };
+      platform: string;
       env: {
-        HOME?: string
-        SHELL?: string
-      }
-    }
+        HOME?: string;
+        SHELL?: string;
+      };
+    };
   }
 }

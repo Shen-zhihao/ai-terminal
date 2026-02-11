@@ -1,27 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
-import { useTerminalStore } from "../../stores/terminal-store";
+import type { TerminalSession } from "@shared/types";
 import { useSettingsStore } from "../../stores/settings-store";
 
-export default function TerminalView() {
+interface TerminalViewProps {
+  session: TerminalSession;
+  isActive: boolean;
+}
+
+export default function TerminalView({ session, isActive }: TerminalViewProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const sessionIdRef = useRef<string | null>(null);
 
-  const [isReady, setIsReady] = useState(false);
-  const addSession = useTerminalStore((state) => state.addSession);
-  const removeSession = useTerminalStore((state) => state.removeSession);
-  const setActiveSession = useTerminalStore((state) => state.setActiveSession);
   const fontSize = useSettingsStore((state) => state.fontSize);
 
   useEffect(() => {
     if (!terminalRef.current) return;
 
-    // 创建 xterm 实例
     const xterm = new Terminal({
       cursorBlink: true,
       fontSize,
@@ -51,95 +50,41 @@ export default function TerminalView() {
       scrollback: 10000,
     });
 
-    // 添加插件
     const fitAddon = new FitAddon();
     xterm.loadAddon(fitAddon);
     xterm.loadAddon(new WebLinksAddon());
-
-    // 挂载到 DOM
     xterm.open(terminalRef.current);
-    fitAddon.fit();
 
-    // 保存引用
     xtermRef.current = xterm;
     fitAddonRef.current = fitAddon;
 
-    // 用于处理 StrictMode 双重挂载
-    let cancelled = false;
-
-    // 创建终端会话
-    const createSession = async () => {
-      try {
-        const response = await window.electronAPI.terminal.create({
-          cols: xterm.cols,
-          rows: xterm.rows,
-        });
-
-        if (cancelled) {
-          // StrictMode cleanup 已执行，销毁刚创建的 session
-          if (response.success && response.data) {
-            window.electronAPI.terminal.destroy(response.data.id);
-          }
-          return;
-        }
-
-        if (response.success && response.data) {
-          sessionIdRef.current = response.data.id;
-          addSession(response.data);
-          setActiveSession(response.data.id);
-          setIsReady(true);
-
-          // 再次调整大小以确保匹配
-          setTimeout(() => {
-            fitAddon.fit();
-          }, 100);
-        } else {
-          xterm.writeln(`\x1b[31m错误：${response.error}\x1b[0m`);
-          setIsReady(true); // 移除 loading 以便用户看到错误
-        }
-      } catch (error: any) {
-        if (!cancelled) {
-          xterm.writeln(`\x1b[31m终端创建失败：${error.message}\x1b[0m`);
-          setIsReady(true); // 移除 loading
-        }
-      }
-    };
-
-    createSession();
-
-    // 监听终端输入
     const disposable = xterm.onData((data) => {
-      if (sessionIdRef.current) {
-        window.electronAPI.terminal.write(sessionIdRef.current, data);
-      }
+      window.electronAPI.terminal.write(session.id, data);
     });
 
-    // 监听终端输出
     const unsubscribeData = window.electronAPI.terminal.onData(
       (sessionId, data) => {
-        if (sessionId === sessionIdRef.current) {
+        if (sessionId === session.id) {
           xterm.write(data);
         }
       },
     );
 
-    // 监听终端退出
     const unsubscribeExit = window.electronAPI.terminal.onExit(
       (sessionId, exitCode) => {
-        if (sessionId === sessionIdRef.current) {
+        if (sessionId === session.id) {
           xterm.writeln(`\n\x1b[33m进程已退出，退出码：${exitCode}\x1b[0m`);
         }
       },
     );
 
-    // 监听窗口大小变化
     const handleResize = () => {
-      if (fitAddonRef.current && sessionIdRef.current) {
+      if (fitAddonRef.current) {
         try {
           fitAddonRef.current.fit();
           if (xtermRef.current) {
             window.electronAPI.terminal.resize(
-              sessionIdRef.current,
+              session.id,
               xtermRef.current.cols,
               xtermRef.current.rows,
             );
@@ -152,41 +97,47 @@ export default function TerminalView() {
 
     window.addEventListener("resize", handleResize);
 
-    // 清理
     return () => {
-      cancelled = true;
       disposable.dispose();
       unsubscribeData();
       unsubscribeExit();
       window.removeEventListener("resize", handleResize);
-
-      if (sessionIdRef.current) {
-        window.electronAPI.terminal.destroy(sessionIdRef.current);
-        removeSession(sessionIdRef.current);
-        sessionIdRef.current = null;
-      }
-
       xterm.dispose();
     };
-  }, [addSession, removeSession, setActiveSession, fontSize]);
+  }, [session.id]);
 
-  // 响应字体大小变化
   useEffect(() => {
     if (xtermRef.current) {
       xtermRef.current.options.fontSize = fontSize;
-      fitAddonRef.current?.fit();
+      if (isActive) {
+        fitAddonRef.current?.fit();
+      }
     }
-  }, [fontSize]);
+  }, [fontSize, isActive]);
+
+  useEffect(() => {
+    if (isActive && fitAddonRef.current && xtermRef.current) {
+      const timer = setTimeout(() => {
+        try {
+          fitAddonRef.current?.fit();
+          window.electronAPI.terminal.resize(
+            session.id,
+            xtermRef.current!.cols,
+            xtermRef.current!.rows,
+          );
+          xtermRef.current?.focus();
+        } catch (e) {
+          console.warn("Fit failed", e);
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isActive, session.id]);
 
   return (
     <div className="terminal-container">
       <div className="terminal-wrapper">
         <div ref={terminalRef} className="terminal-mount" />
-        {!isReady && (
-          <div className="terminal-loading">
-            <div className="terminal-loading-text pulse">正在初始化终端...</div>
-          </div>
-        )}
       </div>
     </div>
   );

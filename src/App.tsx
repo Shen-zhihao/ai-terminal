@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import TerminalView from "./components/Terminal/TerminalView";
+import TerminalArea from "./components/Terminal/TerminalArea";
 import ChatPanel from "./components/Chat/ChatPanel";
 import SettingsModal from "./components/Settings/SettingsModal";
 import SetupWizard from "./components/Setup/SetupWizard";
@@ -129,7 +129,7 @@ function App() {
           className="terminal-area"
           style={{ width: `${splitRatio * 100}%` }}
         >
-          <TerminalView />
+          <TerminalArea />
         </div>
 
         {/* 分割线 */}
