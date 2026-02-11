@@ -13,40 +13,175 @@ import {
 } from "@shared/constants";
 
 export class AIService {
-  private client: OpenAI;
+  private client: OpenAI | null = null;
 
   constructor(private config: AIProvider) {
-    this.client = new OpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.apiBaseUrl,
-      dangerouslyAllowBrowser: true, // 允许在浏览器中使用
-    });
+    this.initClient();
   }
 
   // 更新配置
   updateConfig(config: AIProvider) {
     this.config = config;
-    this.client = new OpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.apiBaseUrl,
-      dangerouslyAllowBrowser: true,
-    });
+    this.initClient();
+  }
+
+  private initClient() {
+    if (this.isOpenAICompatible()) {
+      this.client = new OpenAI({
+        apiKey: this.config.apiKey,
+        baseURL: this.config.apiBaseUrl,
+        dangerouslyAllowBrowser: true, // 允许在浏览器中使用
+      });
+    } else {
+      this.client = null;
+    }
+  }
+
+  private isOpenAICompatible(): boolean {
+    const type = this.config.type;
+    return [
+      "openai",
+      "deepseek",
+      "moonshot",
+      "qwen",
+      "zhipu",
+      "groq",
+      "ollama",
+      "custom",
+    ].includes(type);
   }
 
   // 通用聊天
   async chat(messages: Message[]): Promise<string> {
-    try {
-      const response = await this.client.chat.completions.create({
-        model: this.config.modelName,
-        messages,
-        temperature: this.config.temperature || 0.7,
-        max_tokens: this.config.maxTokens || 2000,
-      });
-
-      return response.choices[0]?.message?.content || "";
-    } catch (error: any) {
-      throw new Error(`AI request failed: ${error.message}`);
+    if (!this.config.apiKey) {
+      throw new Error("AI 功能未配置 API Key，请在设置中配置");
     }
+
+    try {
+      if (this.isOpenAICompatible() && this.client) {
+        return await this.chatOpenAI(messages);
+      } else if (this.config.type === "anthropic") {
+        return await this.chatAnthropic(messages);
+      } else if (this.config.type === "gemini") {
+        return await this.chatGemini(messages);
+      }
+      throw new Error(`Unsupported provider type: ${this.config.type}`);
+    } catch (error: any) {
+      console.error("AI request failed:", error);
+      throw new Error(`AI request failed: ${error.message || error}`);
+    }
+  }
+
+  private async chatOpenAI(messages: Message[]): Promise<string> {
+    const response = await this.client!.chat.completions.create({
+      model: this.config.modelName,
+      messages,
+      temperature: this.config.temperature || 0.7,
+      max_tokens: this.config.maxTokens || 2000,
+    });
+
+    return response.choices[0]?.message?.content || "";
+  }
+
+  private async chatAnthropic(messages: Message[]): Promise<string> {
+    // 提取 system prompt
+    const systemMessage = messages.find((m) => m.role === "system")?.content;
+    const userMessages = messages
+      .filter((m) => m.role !== "system")
+      .map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+    const response = await fetch(`${this.config.apiBaseUrl}/messages`, {
+      method: "POST",
+      headers: {
+        "x-api-key": this.config.apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.config.modelName,
+        max_tokens: this.config.maxTokens || 2000,
+        messages: userMessages,
+        system: systemMessage,
+        temperature: this.config.temperature || 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Anthropic API Error: ${response.status} ${response.statusText} - ${errorText}`,
+      );
+    }
+
+    const data = await response.json();
+    return data.content[0]?.text || "";
+  }
+
+  private async chatGemini(messages: Message[]): Promise<string> {
+    // 构造 Gemini 内容
+    const contents: any[] = [];
+    let systemPrompt = "";
+
+    for (const msg of messages) {
+      if (msg.role === "system") {
+        systemPrompt += msg.content + "\n\n";
+      } else {
+        const role = msg.role === "assistant" ? "model" : "user";
+        // 如果有 system prompt 且是第一条 user 消息，合并
+        let content = msg.content;
+        if (systemPrompt && role === "user" && contents.length === 0) {
+          content = systemPrompt + content;
+          systemPrompt = "";
+        }
+        contents.push({
+          role,
+          parts: [{ text: content }],
+        });
+      }
+    }
+
+    // 如果只有 system prompt
+    if (contents.length === 0 && systemPrompt) {
+      contents.push({
+        role: "user",
+        parts: [{ text: systemPrompt }],
+      });
+    }
+
+    // Gemini URL 通常是 https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+    // 我们假设 apiBaseUrl 只需要是 https://generativelanguage.googleapis.com/v1beta/models
+    // 或者用户提供完整的 base url 如 https://generativelanguage.googleapis.com/v1beta
+
+    // 为了兼容性，我们假设用户提供的 apiBaseUrl 是 https://generativelanguage.googleapis.com/v1beta
+    const baseUrl = this.config.apiBaseUrl.replace(/\/$/, "");
+    const url = `${baseUrl}/models/${this.config.modelName}:generateContent?key=${this.config.apiKey}`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: this.config.temperature || 0.7,
+          maxOutputTokens: this.config.maxTokens || 2000,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Gemini API Error: ${response.status} ${response.statusText} - ${errorText}`,
+      );
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
   }
 
   // 生成命令

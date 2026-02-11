@@ -125,4 +125,26 @@
       cursor: not-allowed;
     }
   }
+
+  &-no-api {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: @bg-tertiary;
+    border-radius: 0.5rem;
+    color: @text-secondary;
+    font-size: 0.875rem;
+
+    button {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      background: @primary;
+      color: @text-primary;
+
+      &:hover {
+        background: @primary-hover;
+      }
+    }
+  }
 }

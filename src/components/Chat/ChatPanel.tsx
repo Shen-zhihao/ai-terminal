@@ -1,66 +1,76 @@
-import { useState, useRef, useEffect } from 'react'
-import { useChatStore } from '../../stores/chat-store'
-import { useSettingsStore } from '../../stores/settings-store'
-import { getAIService } from '../../services/ai-service'
-import ChatMessage from './ChatMessage'
-import CommandSuggestion from './CommandSuggestion'
-import './ChatPanel.less'
+import { useState, useRef, useEffect } from "react";
+import { useChatStore } from "../../stores/chat-store";
+import { useSettingsStore } from "../../stores/settings-store";
+import { getAIService } from "../../services/ai-service";
+import ChatMessage from "./ChatMessage";
+import CommandSuggestion from "./CommandSuggestion";
+import "./ChatPanel.less";
 
 export default function ChatPanel() {
-  const [input, setInput] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const messages = useChatStore((state) => state.messages)
-  const isLoading = useChatStore((state) => state.isLoading)
-  const addMessage = useChatStore((state) => state.addMessage)
-  const setLoading = useChatStore((state) => state.setLoading)
-  const setError = useChatStore((state) => state.setError)
+  const messages = useChatStore((state) => state.messages);
+  const isLoading = useChatStore((state) => state.isLoading);
+  const addMessage = useChatStore((state) => state.addMessage);
+  const setLoading = useChatStore((state) => state.setLoading);
+  const setError = useChatStore((state) => state.setError);
 
-  const aiProvider = useSettingsStore((state) => state.aiProvider)
+  const aiProvider = useSettingsStore((state) => state.aiProvider);
+  const hasApiKey = !!aiProvider.apiKey && aiProvider.apiKey.trim() !== "";
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading) return
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
 
-    const userMessage = input.trim()
-    setInput('')
+    const userMessage = input.trim();
+    setInput("");
 
-    addMessage({ role: 'user', content: userMessage })
+    addMessage({ role: "user", content: userMessage });
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
-      const aiService = getAIService(aiProvider)
+      const aiService = getAIService(aiProvider);
 
-      if (userMessage.toLowerCase().includes('explain') || userMessage.toLowerCase().includes('what does') || userMessage.includes('解释') || userMessage.includes('什么意思')) {
-        const command = extractCommand(userMessage)
+      if (
+        userMessage.toLowerCase().includes("explain") ||
+        userMessage.toLowerCase().includes("what does") ||
+        userMessage.includes("解释") ||
+        userMessage.includes("什么意思")
+      ) {
+        const command = extractCommand(userMessage);
         if (command) {
-          const explanation = await aiService.explainCommand(command)
-          addMessage({ role: 'assistant', content: explanation })
+          const explanation = await aiService.explainCommand(command);
+          addMessage({ role: "assistant", content: explanation });
         } else {
-          addMessage({ role: 'assistant', content: '请提供要解释的命令。' })
+          addMessage({ role: "assistant", content: "请提供要解释的命令。" });
         }
       } else {
-        const suggestion = await aiService.generateCommand(userMessage)
-        addMessage({ role: 'assistant', content: '已为你生成命令：', suggestion })
+        const suggestion = await aiService.generateCommand(userMessage);
+        addMessage({
+          role: "assistant",
+          content: "已为你生成命令：",
+          suggestion,
+        });
       }
     } catch (error: any) {
-      setError(error.message)
-      addMessage({ role: 'assistant', content: `错误：${error.message}` })
+      setError(error.message);
+      addMessage({ role: "assistant", content: `错误：${error.message}` });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const extractCommand = (text: string): string | null => {
-    const match = text.match(/`([^`]+)`/)
-    return match ? match[1] : null
-  }
+    const match = text.match(/`([^`]+)`/);
+    return match ? match[1] : null;
+  };
 
   return (
     <div className="chat-panel">
@@ -107,19 +117,30 @@ export default function ChatPanel() {
       </div>
 
       <div className="chat-input">
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="输入你想执行的操作..."
-            disabled={isLoading}
-          />
-          <button type="submit" disabled={!input.trim() || isLoading}>
-            发送
-          </button>
-        </form>
+        {!hasApiKey ? (
+          <div className="chat-input-no-api">
+            <span>AI 功能需要配置 API Key</span>
+            <button
+              onClick={() => window.dispatchEvent(new Event("open-settings"))}
+            >
+              去配置
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="输入你想执行的操作..."
+              disabled={isLoading}
+            />
+            <button type="submit" disabled={!input.trim() || isLoading}>
+              发送
+            </button>
+          </form>
+        )}
       </div>
     </div>
-  )
+  );
 }

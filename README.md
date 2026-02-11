@@ -9,7 +9,8 @@
 - **错误诊断** 🔧：自动分析命令执行错误并提供解决方案
 - **历史记录搜索** 🔍：通过自然语言搜索历史命令
 - **风险警告** ⚠️：自动识别危险命令并警告用户
-- **多模型支持** 🤖：支持 OpenAI、DeepSeek 等多种 AI 模型
+- **多模型支持** 🤖：支持 OpenAI、DeepSeek、Anthropic (Claude)、Google Gemini 等多种 AI 模型
+- **灵活配置** ⚙️：支持跳过 AI 配置作为普通终端使用
 
 ## 技术栈
 
@@ -66,8 +67,8 @@ pnpm dev
 
 首次启动时，应用会自动显示**配置向导**，引导你完成以下设置：
 
-1. **选择 AI 提供商**：OpenAI、DeepSeek 或其他兼容服务
-2. **输入 API Key**：从对应平台获取的 API 密钥
+1. **选择 AI 提供商**：OpenAI、DeepSeek、Anthropic、Gemini 或其他兼容服务
+2. **输入 API Key**：从对应平台获取的 API 密钥（可选，可跳过）
 3. **配置 API 地址和模型**：自动填充默认值，可根据需要修改
 
 完成配置后即可开始使用！稍后也可以在设置中修改这些配置。
@@ -97,18 +98,24 @@ pnpm electron:package
 首次启动应用时会自动显示配置向导：
 
 **步骤 1：选择 AI 提供商**
+
 - 🤖 OpenAI：GPT-4、GPT-3.5 等模型
 - 🧠 DeepSeek：DeepSeek Chat 系列模型
+- 🎭 Anthropic：Claude 3.5 Sonnet, Claude 3 Opus 等模型
+- 💎 Google Gemini：Gemini Pro 等模型
 - ⚙️ 其他：任何 OpenAI 兼容的 API 服务
 
+或者点击底部的 **"跳过配置"** 按钮，仅作为普通终端使用。
+
 **步骤 2：填写配置信息**
+
 - **API Key**（必填）：从对应平台获取
 - **API Base URL**：自动填充，可修改
 - **模型名称**：自动填充推荐模型
 
 配置完成后会自动保存到本地，并加密存储 API Key。
 
-如需修改配置，点击右上角 "Settings" 按钮即可。
+如需修改配置，或者之前跳过了配置现在想启用 AI 功能，点击右上角 "Settings" 按钮（或侧边栏中的"去配置"）即可。
 
 ### 2. 生成命令
 
@@ -119,6 +126,7 @@ pnpm electron:package
 - "查找包含 'error' 的文件"
 
 AI 会生成对应的 shell 命令，并标注风险等级。你可以：
+
 - ✏️ **编辑**命令
 - ▶️ **执行**命令
 - 📋 **复制**命令

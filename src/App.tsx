@@ -22,6 +22,13 @@ function App() {
     }
   }, [theme]);
 
+  useEffect(() => {
+    const handleOpenSettings = () => setIsSettingsOpen(true);
+    window.addEventListener("open-settings", handleOpenSettings);
+    return () =>
+      window.removeEventListener("open-settings", handleOpenSettings);
+  }, []);
+
   // 加载配置
   useEffect(() => {
     const loadConfig = async () => {
@@ -30,11 +37,13 @@ function App() {
         if (response.success && response.data) {
           useSettingsStore.getState().loadConfig(response.data);
 
-          // 检查是否已配置 API Key
-          if (
-            !response.data.aiProvider?.apiKey ||
-            response.data.aiProvider.apiKey.trim() === ""
-          ) {
+          // 检查是否已完成设置（优先使用 isSetupCompleted 标记，兼容旧版本检查 apiKey）
+          const hasApiKey =
+            !!response.data.aiProvider?.apiKey &&
+            response.data.aiProvider.apiKey.trim() !== "";
+          const isCompleted = response.data.isSetupCompleted || hasApiKey;
+
+          if (!isCompleted) {
             setShowSetupWizard(true);
           }
         } else {
@@ -100,8 +109,7 @@ function App() {
         className={`toolbar ${window.electronAPI.platform === "darwin" ? "macos" : ""}`}
       >
         <div className="toolbar-left">
-          <h1 className="toolbar-title">AI 终端</h1>
-          <div className="toolbar-platform">{window.electronAPI.platform}</div>
+          <h1 className="toolbar-title">AI终端</h1>
         </div>
 
         <div className="toolbar-actions">

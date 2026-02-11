@@ -37,15 +37,7 @@ function createMenu() {
           } as Electron.MenuItemConstructorOptions,
         ]
       : []),
-    // 文件菜单
-    {
-      label: "文件",
-      submenu: [
-        isMac
-          ? { label: "关闭", role: "close" }
-          : { label: "退出", role: "quit" },
-      ],
-    },
+
     // 编辑菜单
     {
       label: "编辑",
