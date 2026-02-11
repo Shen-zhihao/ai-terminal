@@ -12,7 +12,6 @@ function App() {
   const [isLoadingConfig, setIsLoadingConfig] = useState(true)
   const [splitRatio, setSplitRatio] = useState(0.6) // 60% terminal, 40% chat
   const theme = useSettingsStore((state) => state.theme)
-  const aiProvider = useSettingsStore((state) => state.aiProvider)
 
   useEffect(() => {
     // 应用主题

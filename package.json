@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "electron:dev": "vite",
     "electron:build": "tsc && vite build",
-    "electron:package": "electron-builder"
+    "electron:package": "electron-builder",
+    "lint": "eslint src electron shared --ext .ts,.tsx",
+    "lint:fix": "eslint src electron shared --ext .ts,.tsx --fix"
   },
   "keywords": [
     "terminal",
@@ -30,12 +32,18 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^32.2.10",
     "electron-builder": "^25.1.8",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "less": "^4.5.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",

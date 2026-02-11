@@ -15,7 +15,7 @@ interface TerminalState {
   clearInputHistory: () => void
 }
 
-export const useTerminalStore = create<TerminalState>((set, get) => ({
+export const useTerminalStore = create<TerminalState>((set, _get) => ({
   sessions: [],
   activeSessionId: null,
   inputHistory: [],

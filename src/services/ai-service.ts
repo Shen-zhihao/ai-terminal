@@ -75,7 +75,7 @@ export class AIService {
         riskLevel,
         tags,
       }
-    } catch (error) {
+    } catch (_error) {
       // 如果不是 JSON，将整个响应作为命令
       const command = response.trim()
       return {
@@ -124,7 +124,7 @@ export class AIService {
         analysis: parsed.analysis || 'Analysis not available',
         solutions: parsed.solutions || [],
       }
-    } catch (parseError) {
+    } catch (_parseError) {
       // 如果不是 JSON，返回纯文本分析
       return {
         error,
@@ -166,7 +166,7 @@ export class AIService {
         return indices
           .map((idx: number) => recentHistory[idx - 1])
           .filter(Boolean)
-      } catch (error) {
+      } catch (_error) {
         // 回退到关键词匹配
         return matched
       }

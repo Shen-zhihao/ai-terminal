@@ -28,7 +28,6 @@ export default function TerminalView() {
         background: '#000000',
         foreground: '#ffffff',
         cursor: '#ffffff',
-        selection: 'rgba(255, 255, 255, 0.3)',
         black: '#000000',
         red: '#ff5555',
         green: '#50fa7b',
@@ -133,7 +132,7 @@ export default function TerminalView() {
 
       xterm.dispose()
     }
-  }, [addSession])
+  }, [addSession, fontSize])
 
   // 响应字体大小变化
   useEffect(() => {
