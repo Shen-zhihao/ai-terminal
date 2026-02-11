@@ -11,6 +11,8 @@ export default defineConfig({
       {
         entry: 'electron/main.ts',
         onstart({ startup }) {
+          // VSCode/Trae sets ELECTRON_RUN_AS_NODE=1 which prevents Electron from loading properly
+          delete process.env.ELECTRON_RUN_AS_NODE
           startup()
         },
         vite: {

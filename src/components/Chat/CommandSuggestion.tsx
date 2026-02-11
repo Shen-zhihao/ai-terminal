@@ -11,25 +11,11 @@ export default function CommandSuggestion({ suggestion }: CommandSuggestionProps
   const [editedCommand, setEditedCommand] = useState(suggestion.command)
   const activeSessionId = useTerminalStore((state) => state.activeSessionId)
 
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'dangerous':
-        return 'bg-red-900 border-red-700 text-red-200'
-      case 'warning':
-        return 'bg-yellow-900 border-yellow-700 text-yellow-200'
-      default:
-        return 'bg-green-900 border-green-700 text-green-200'
-    }
-  }
-
   const getRiskIcon = (risk: string) => {
     switch (risk) {
-      case 'dangerous':
-        return '⚠️'
-      case 'warning':
-        return '⚡'
-      default:
-        return '✓'
+      case 'dangerous': return '⚠️'
+      case 'warning': return '⚡'
+      default: return '✓'
     }
   }
 
@@ -50,61 +36,44 @@ export default function CommandSuggestion({ suggestion }: CommandSuggestionProps
   }
 
   return (
-    <div className={`border rounded-lg p-4 ${getRiskColor(suggestion.riskLevel)}`}>
-      {/* 风险标签 */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold uppercase">
+    <div className={`cmd-suggestion cmd-suggestion-${suggestion.riskLevel}`}>
+      <div className="cmd-suggestion-header">
+        <span className="cmd-suggestion-risk">
           {getRiskIcon(suggestion.riskLevel)} {suggestion.riskLevel}
         </span>
         {suggestion.tags && suggestion.tags.length > 0 && (
-          <div className="flex space-x-1">
+          <div className="cmd-suggestion-tags">
             {suggestion.tags.map((tag, i) => (
-              <span key={i} className="text-xs px-2 py-0.5 bg-black bg-opacity-20 rounded">
-                {tag}
-              </span>
+              <span key={i} className="cmd-suggestion-tag">{tag}</span>
             ))}
           </div>
         )}
       </div>
 
-      {/* 命令 */}
-      <div className="mb-2">
+      <div className="cmd-suggestion-command">
         {isEditing ? (
           <input
             type="text"
             value={editedCommand}
             onChange={(e) => setEditedCommand(e.target.value)}
-            className="w-full px-3 py-2 bg-black bg-opacity-30 rounded font-mono text-sm"
+            className="cmd-suggestion-edit-input"
             autoFocus
           />
         ) : (
-          <code className="block px-3 py-2 bg-black bg-opacity-30 rounded font-mono text-sm break-all">
-            {editedCommand}
-          </code>
+          <code className="cmd-suggestion-code">{editedCommand}</code>
         )}
       </div>
 
-      {/* 解释 */}
-      <p className="text-sm mb-3 opacity-90">{suggestion.explanation}</p>
+      <p className="cmd-suggestion-explanation">{suggestion.explanation}</p>
 
-      {/* 操作按钮 */}
-      <div className="flex space-x-2">
-        <button
-          onClick={handleExecute}
-          className="px-3 py-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm transition-colors"
-        >
+      <div className="cmd-suggestion-actions">
+        <button onClick={handleExecute} className="cmd-suggestion-btn">
           ▶ Execute
         </button>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="px-3 py-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm transition-colors"
-        >
+        <button onClick={() => setIsEditing(!isEditing)} className="cmd-suggestion-btn">
           ✏️ {isEditing ? 'Done' : 'Edit'}
         </button>
-        <button
-          onClick={() => navigator.clipboard.writeText(editedCommand)}
-          className="px-3 py-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm transition-colors"
-        >
+        <button onClick={() => navigator.clipboard.writeText(editedCommand)} className="cmd-suggestion-btn">
           📋 Copy
         </button>
       </div>

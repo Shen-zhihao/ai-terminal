@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { AIProvider } from '@shared/types'
 import { useSettingsStore } from '../../stores/settings-store'
+import './SetupWizard.less'
 
 interface SetupWizardProps {
   onComplete: () => void
@@ -81,121 +82,97 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center z-50">
-      <div className="max-w-2xl w-full mx-4">
-        {/* 步骤 1: 选择 AI 提供商 */}
+    <div className="setup-wizard">
+      <div className="setup-container">
         {step === 1 && (
           <div className="slide-in">
-            <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold text-white mb-4">
-                欢迎使用 AI Terminal
-              </h1>
-              <p className="text-xl text-gray-300">
-                让我们开始配置您的 AI 助手
-              </p>
+            <div className="setup-header">
+              <h1 className="setup-header-title">欢迎使用 AI Terminal</h1>
+              <p className="setup-header-subtitle">让我们开始配置您的 AI 助手</p>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                选择 AI 提供商
-              </h2>
-
-              {AI_PROVIDERS.map((provider) => (
-                <button
-                  key={provider.type}
-                  onClick={() => handleProviderSelect(provider)}
-                  className="w-full p-6 bg-gray-800 bg-opacity-50 backdrop-blur-sm hover:bg-opacity-70 rounded-xl border border-gray-700 hover:border-blue-500 transition-all text-left group"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-4xl">{provider.icon}</div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors">
-                        {provider.name}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        {provider.description}
-                      </p>
+            <div className="providers">
+              <h2 className="providers-title">选择 AI 提供商</h2>
+              <div className="providers-list">
+                {AI_PROVIDERS.map((provider) => (
+                  <button
+                    key={provider.type}
+                    onClick={() => handleProviderSelect(provider)}
+                    className="provider-card"
+                  >
+                    <div className="provider-card-content">
+                      <div className="provider-card-icon">{provider.icon}</div>
+                      <div className="provider-card-info">
+                        <h3 className="provider-card-name">{provider.name}</h3>
+                        <p className="provider-card-desc">{provider.description}</p>
+                      </div>
+                      <div className="provider-card-arrow">→</div>
                     </div>
-                    <div className="text-gray-500 group-hover:text-blue-400 transition-colors">
-                      →
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* 步骤 2: 配置详情 */}
         {step === 2 && selectedProvider && (
           <div className="slide-in">
-            <div className="text-center mb-8">
-              <div className="text-5xl mb-4">{selectedProvider.icon}</div>
-              <h2 className="text-3xl font-bold text-white mb-2">
-                配置 {selectedProvider.name}
-              </h2>
-              <p className="text-gray-400">
-                请填写以下信息以完成设置
-              </p>
+            <div className="setup-step-header">
+              <div className="setup-step-header-icon">{selectedProvider.icon}</div>
+              <h2 className="setup-step-header-title">配置 {selectedProvider.name}</h2>
+              <p className="setup-step-header-subtitle">请填写以下信息以完成设置</p>
             </div>
 
-            <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 space-y-6">
-              {/* API Key */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  API Key <span className="text-red-400">*</span>
+            <div className="config-form">
+              <div className="config-form-field">
+                <label className="config-form-label">
+                  API Key <span className="required">*</span>
                 </label>
-                <div className="relative">
+                <div className="config-form-input-wrapper">
                   <input
                     type={showApiKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={selectedProvider.type === 'deepseek' ? 'sk-...' : 'sk-...'}
-                    className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
+                    placeholder="sk-..."
+                    className="config-form-input"
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="config-form-toggle-btn"
                   >
                     {showApiKey ? '🙈' : '👁️'}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="config-form-hint">
                   {selectedProvider.type === 'openai' && '在 platform.openai.com 获取'}
                   {selectedProvider.type === 'deepseek' && '在 platform.deepseek.com 获取'}
                   {selectedProvider.type === 'custom' && '从您的 API 提供商获取'}
                 </p>
               </div>
 
-              {/* API Base URL */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  API Base URL
-                </label>
+              <div className="config-form-field">
+                <label className="config-form-label">API Base URL</label>
                 <input
                   type="text"
                   value={apiBaseUrl}
                   onChange={(e) => setApiBaseUrl(e.target.value)}
                   placeholder="https://api.example.com/v1"
-                  className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="config-form-input"
                 />
               </div>
 
-              {/* Model Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  模型名称
-                </label>
+              <div className="config-form-field">
+                <label className="config-form-label">模型名称</label>
                 <input
                   type="text"
                   value={modelName}
                   onChange={(e) => setModelName(e.target.value)}
                   placeholder="gpt-4"
-                  className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="config-form-input"
                 />
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="config-form-hint">
                   常用模型：
                   {selectedProvider.type === 'openai' && ' gpt-4, gpt-3.5-turbo'}
                   {selectedProvider.type === 'deepseek' && ' deepseek-chat, deepseek-coder'}
@@ -203,32 +180,26 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                 </p>
               </div>
 
-              {/* 提示信息 */}
-              <div className="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="text-blue-400 text-xl">💡</div>
-                  <div className="flex-1 text-sm text-blue-300">
-                    <p className="font-medium mb-1">安全提示</p>
-                    <p className="text-blue-400 opacity-90">
+              <div className="info-box">
+                <div className="info-box-content">
+                  <div className="info-box-icon">💡</div>
+                  <div className="info-box-text">
+                    <p className="info-box-text-title">安全提示</p>
+                    <p className="info-box-text-desc">
                       您的 API Key 将被加密存储在本地配置文件中，不会上传到任何服务器。
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* 操作按钮 */}
-              <div className="flex space-x-3 pt-4">
-                <button
-                  onClick={() => setStep(1)}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                  disabled={isLoading}
-                >
+              <div className="config-actions">
+                <button onClick={() => setStep(1)} className="btn btn-secondary" disabled={isLoading}>
                   ← 返回
                 </button>
                 <button
                   onClick={handleComplete}
                   disabled={!apiKey.trim() || isLoading}
-                  className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+                  className="btn btn-primary"
                 >
                   {isLoading ? '保存中...' : '完成设置 →'}
                 </button>
@@ -237,8 +208,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
           </div>
         )}
 
-        {/* 底部提示 */}
-        <div className="text-center mt-8 text-gray-500 text-sm">
+        <div className="setup-footer">
           <p>稍后可以在设置中修改这些配置</p>
         </div>
       </div>

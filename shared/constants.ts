@@ -53,8 +53,8 @@ export const DEFAULT_CONFIG = {
     fontSize: 14,
     fontFamily: 'Monaco, Menlo, "Courier New", monospace',
     theme: 'dark',
-    shell: process.env.SHELL || '/bin/bash',
-    defaultCwd: process.env.HOME || '~',
+    shell: typeof process !== 'undefined' ? process.env.SHELL || '/bin/bash' : '/bin/bash',
+    defaultCwd: typeof process !== 'undefined' ? process.env.HOME || '~' : '~',
   },
   features: {
     autoErrorDiagnosis: true,
@@ -64,11 +64,13 @@ export const DEFAULT_CONFIG = {
 } as const
 
 // AI 提示词模板
+const platform = typeof process !== 'undefined' ? process.platform : 'unknown'
+
 export const AI_PROMPTS = {
   SYSTEM_COMMAND_GENERATION: `You are a helpful terminal assistant. Generate shell commands based on user's natural language requests.
 Rules:
 - Output ONLY the command, no explanations
-- Consider the current OS (${process.platform})
+- Consider the current OS (${platform})
 - Use safe, standard commands
 - If the request is unclear, ask for clarification`,
 

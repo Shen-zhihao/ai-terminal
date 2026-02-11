@@ -143,12 +143,12 @@ export default function TerminalView() {
   }, [fontSize])
 
   return (
-    <div className="h-full flex flex-col bg-black">
-      <div className="flex-1 relative">
-        <div ref={terminalRef} className="absolute inset-0" />
+    <div className="terminal-container">
+      <div className="terminal-wrapper">
+        <div ref={terminalRef} className="terminal-mount" />
         {!isReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black">
-            <div className="text-gray-400 animate-pulse">
+          <div className="terminal-loading">
+            <div className="terminal-loading-text pulse">
               Initializing terminal...
             </div>
           </div>
