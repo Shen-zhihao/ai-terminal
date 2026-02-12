@@ -5,6 +5,7 @@ import SettingsModal from "./components/Settings/SettingsModal";
 import SetupWizard from "./components/Setup/SetupWizard";
 import { useSettingsStore } from "./stores/settings-store";
 import { useSSHStore } from "./stores/ssh-store";
+import { SSHIcon } from "./components/common/Icons";
 import "./App.less";
 
 function App() {
@@ -126,7 +127,7 @@ function App() {
             onClick={() => useSSHStore.getState().setSSHModalOpen(true)}
             className="btn-settings"
           >
-            SSH
+            <SSHIcon width={15} height={15} /> SSH
           </button>
           {isAiConfigured && (
             <button
