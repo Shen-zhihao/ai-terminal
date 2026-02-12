@@ -3,6 +3,8 @@ import type {
   TerminalOptions,
   IPCResponse,
   CommandHistory,
+  SSHConnectOptions,
+  SSHHostConfig,
 } from "@shared/types";
 
 declare global {
@@ -23,6 +25,32 @@ declare global {
         onExit: (
           callback: (sessionId: string, exitCode: number) => void,
         ) => () => void;
+      };
+      ssh: {
+        connect: (options: SSHConnectOptions) => Promise<IPCResponse>;
+        write: (sessionId: string, data: string) => Promise<IPCResponse>;
+        resize: (
+          sessionId: string,
+          cols: number,
+          rows: number,
+        ) => Promise<IPCResponse>;
+        disconnect: (sessionId: string) => Promise<IPCResponse>;
+        onData: (
+          callback: (sessionId: string, data: string) => void,
+        ) => () => void;
+        onStatus: (
+          callback: (
+            sessionId: string,
+            status: string,
+            error?: string,
+          ) => void,
+        ) => () => void;
+        onExit: (callback: (sessionId: string) => void) => () => void;
+        getHosts: () => Promise<IPCResponse<SSHHostConfig[]>>;
+        saveHost: (host: SSHHostConfig) => Promise<IPCResponse>;
+        deleteHost: (hostId: string) => Promise<IPCResponse>;
+        selectKeyFile: () => Promise<IPCResponse<string | null>>;
+        onOpenModal: (callback: () => void) => () => void;
       };
       shell: {
         openNewWindow: () => Promise<IPCResponse>;

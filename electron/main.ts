@@ -1,6 +1,7 @@
 import {
   app,
   BrowserWindow,
+  dialog,
   ipcMain,
   Menu,
   shell,
@@ -8,15 +9,17 @@ import {
 } from "electron";
 import path from "path";
 import { TerminalManager } from "./terminal-manager";
+import { SSHManager } from "./ssh-manager";
 import { ConfigManager } from "./config-manager";
 import { IPC_CHANNELS } from "../shared/constants";
-import type { IPCResponse, TerminalOptions } from "../shared/types";
+import type { IPCResponse, TerminalOptions, SSHConnectOptions, SSHHostConfig } from "../shared/types";
 
 // 禁用硬件加速（可选）
 // app.disableHardwareAcceleration()
 
 let mainWindow: BrowserWindow | null = null;
 let terminalManager: TerminalManager | null = null;
+let sshManager: SSHManager | null = null;
 let configManager: ConfigManager | null = null;
 const windows = new Map<number, BrowserWindow>();
 const sessionOwnerMap = new Map<string, number>();
@@ -32,13 +35,15 @@ function getActiveWindow() {
 }
 
 function cleanupSessionsByWebContentsId(ownerId: number) {
-  if (!terminalManager) return;
   const sessionIds = Array.from(sessionOwnerMap.entries())
     .filter(([, id]) => id === ownerId)
     .map(([sessionId]) => sessionId);
 
   sessionIds.forEach((sessionId) => {
-    terminalManager?.destroy(sessionId);
+    // 尝试作为本地终端销毁
+    try { terminalManager?.destroy(sessionId); } catch { /* 非本地终端会话 */ }
+    // 尝试作为 SSH 会话断开
+    try { sshManager?.disconnect(sessionId); } catch { /* 非 SSH 会话 */ }
     sessionOwnerMap.delete(sessionId);
   });
 }
@@ -129,6 +134,15 @@ function createMenu() {
           click: () => {
             const targetWindow = getActiveWindow();
             targetWindow?.webContents.send(IPC_CHANNELS.SHELL_NEW_TAB);
+          },
+        },
+        { type: "separator" },
+        {
+          label: "SSH 连接",
+          accelerator: "CmdOrCtrl+Shift+S",
+          click: () => {
+            const targetWindow = getActiveWindow();
+            targetWindow?.webContents.send("ssh:open-modal");
           },
         },
         { type: "separator" },
@@ -384,6 +398,147 @@ function setupIPC() {
       return { success: false, error: error.message };
     }
   });
+
+  // SSH 操作
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_CONNECT,
+    async (event, options: SSHConnectOptions): Promise<IPCResponse> => {
+      try {
+        if (!sshManager) throw new Error("SSH manager not initialized");
+
+        const senderId = event.sender.id;
+        const session = await sshManager.connect(
+          options,
+          (sessionId, data) => {
+            const ownerId = sessionOwnerMap.get(sessionId);
+            const target = ownerId ? webContents.fromId(ownerId) : null;
+            target?.send(IPC_CHANNELS.SSH_DATA, sessionId, data);
+          },
+          (sessionId, status, error) => {
+            const ownerId = sessionOwnerMap.get(sessionId);
+            const target = ownerId ? webContents.fromId(ownerId) : null;
+            target?.send(IPC_CHANNELS.SSH_STATUS, sessionId, status, error);
+          },
+          (sessionId) => {
+            const ownerId = sessionOwnerMap.get(sessionId);
+            const target = ownerId ? webContents.fromId(ownerId) : null;
+            target?.send(IPC_CHANNELS.SSH_EXIT, sessionId);
+            sessionOwnerMap.delete(sessionId);
+          },
+        );
+
+        sessionOwnerMap.set(session.id, senderId);
+        return { success: true, data: session };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_WRITE,
+    async (_, sessionId: string, data: string): Promise<IPCResponse> => {
+      try {
+        if (!sshManager) throw new Error("SSH manager not initialized");
+        sshManager.write(sessionId, data);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_RESIZE,
+    async (
+      _,
+      sessionId: string,
+      cols: number,
+      rows: number,
+    ): Promise<IPCResponse> => {
+      try {
+        if (!sshManager) throw new Error("SSH manager not initialized");
+        sshManager.resize(sessionId, cols, rows);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_DISCONNECT,
+    async (_, sessionId: string): Promise<IPCResponse> => {
+      try {
+        if (!sshManager) throw new Error("SSH manager not initialized");
+        sshManager.disconnect(sessionId);
+        sessionOwnerMap.delete(sessionId);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  // SSH 主机管理
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_HOSTS_GET,
+    async (): Promise<IPCResponse> => {
+      try {
+        if (!configManager) throw new Error("Config manager not initialized");
+        const hosts = await configManager.getSSHHosts();
+        return { success: true, data: hosts };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_HOST_SAVE,
+    async (_, host: SSHHostConfig): Promise<IPCResponse> => {
+      try {
+        if (!configManager) throw new Error("Config manager not initialized");
+        await configManager.saveSSHHost(host);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_HOST_DELETE,
+    async (_, hostId: string): Promise<IPCResponse> => {
+      try {
+        if (!configManager) throw new Error("Config manager not initialized");
+        await configManager.deleteSSHHost(hostId);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_SELECT_KEY_FILE,
+    async (): Promise<IPCResponse> => {
+      try {
+        const result = await dialog.showOpenDialog({
+          title: "选择 SSH 私钥文件",
+          defaultPath: path.join(process.env.HOME || "", ".ssh"),
+          properties: ["openFile"],
+          filters: [{ name: "All Files", extensions: ["*"] }],
+        });
+        if (result.canceled || result.filePaths.length === 0) {
+          return { success: true, data: null };
+        }
+        return { success: true, data: result.filePaths[0] };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
 }
 
 // 应用生命周期
@@ -391,6 +546,7 @@ app.whenReady().then(async () => {
   try {
     // 初始化管理器
     terminalManager = new TerminalManager();
+    sshManager = new SSHManager();
     configManager = new ConfigManager();
 
     // 设置 IPC
@@ -421,6 +577,7 @@ app.on("window-all-closed", () => {
 
 app.on("before-quit", () => {
   terminalManager?.destroyAll();
+  sshManager?.disconnectAll();
 });
 
 // 错误处理

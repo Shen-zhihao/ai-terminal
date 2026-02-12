@@ -11,6 +11,7 @@ interface TerminalState {
   addSession: (session: TerminalSession) => void
   removeSession: (sessionId: string) => void
   setActiveSession: (sessionId: string) => void
+  updateSession: (sessionId: string, updates: Partial<TerminalSession>) => void
   addToInputHistory: (command: string) => void
   clearInputHistory: () => void
 }
@@ -45,6 +46,14 @@ export const useTerminalStore = create<TerminalState>((set, _get) => ({
 
   setActiveSession: (sessionId) => {
     set({ activeSessionId: sessionId })
+  },
+
+  updateSession: (sessionId, updates) => {
+    set((state) => ({
+      sessions: state.sessions.map((s) =>
+        s.id === sessionId ? { ...s, ...updates } : s
+      ),
+    }))
   },
 
   addToInputHistory: (command) => {

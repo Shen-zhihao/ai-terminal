@@ -19,7 +19,7 @@ export default defineConfig({
           build: {
             outDir: 'dist-electron',
             rollupOptions: {
-              external: ['electron', 'node-pty'],
+              external: ['electron', 'node-pty', 'ssh2'],
               output: {
                 format: 'cjs'
               }

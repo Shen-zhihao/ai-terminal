@@ -27,6 +27,21 @@ export const IPC_CHANNELS = {
   HISTORY_GET: "history:get",
   HISTORY_ADD: "history:add",
   HISTORY_CLEAR: "history:clear",
+
+  // SSH 操作
+  SSH_CONNECT: "ssh:connect",
+  SSH_DISCONNECT: "ssh:disconnect",
+  SSH_WRITE: "ssh:write",
+  SSH_RESIZE: "ssh:resize",
+  SSH_DATA: "ssh:data",
+  SSH_STATUS: "ssh:status",
+  SSH_EXIT: "ssh:exit",
+
+  // SSH 主机管理
+  SSH_HOSTS_GET: "ssh:hosts-get",
+  SSH_HOST_SAVE: "ssh:host-save",
+  SSH_HOST_DELETE: "ssh:host-delete",
+  SSH_SELECT_KEY_FILE: "ssh:select-key-file",
 } as const;
 
 // 危险命令模式

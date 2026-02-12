@@ -4,6 +4,7 @@ import ChatPanel from "./components/Chat/ChatPanel";
 import SettingsModal from "./components/Settings/SettingsModal";
 import SetupWizard from "./components/Setup/SetupWizard";
 import { useSettingsStore } from "./stores/settings-store";
+import { useSSHStore } from "./stores/ssh-store";
 import "./App.less";
 
 function App() {
@@ -121,6 +122,12 @@ function App() {
         </div>
 
         <div className="toolbar-actions">
+          <button
+            onClick={() => useSSHStore.getState().setSSHModalOpen(true)}
+            className="btn-settings"
+          >
+            SSH
+          </button>
           {isAiConfigured && (
             <button
               onClick={() => setIsChatVisible(!isChatVisible)}

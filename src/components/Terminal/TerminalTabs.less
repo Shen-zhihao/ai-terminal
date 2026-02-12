@@ -56,6 +56,44 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+    }
+
+    .ssh-status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 6px;
+      flex-shrink: 0;
+
+      &.connecting {
+        background: @warning;
+        animation: statusPulse 1s infinite;
+      }
+
+      &.connected {
+        background: @success;
+      }
+
+      &.disconnected {
+        background: @text-tertiary;
+      }
+
+      &.error {
+        background: @danger;
+      }
+    }
+
+    @keyframes statusPulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.3;
+      }
     }
 
     .tab-close {

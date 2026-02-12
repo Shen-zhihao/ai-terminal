@@ -25,7 +25,18 @@ export default function TerminalTabs({
             className={`tab-item ${session.id === activeId ? "active" : ""}`}
             onClick={() => onSelect(session.id)}
           >
-            <span className="tab-title">终端 {index + 1}</span>
+            <span className="tab-title">
+              {session.type === "ssh" ? (
+                <>
+                  <span
+                    className={`ssh-status-dot ${session.sshInfo?.status || "disconnected"}`}
+                  />
+                  {session.sshInfo?.username}@{session.sshInfo?.host}
+                </>
+              ) : (
+                `终端 ${index + 1}`
+              )}
+            </span>
             <span
               className="tab-close"
               onClick={(event) => {

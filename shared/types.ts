@@ -1,10 +1,20 @@
 // 终端相关类型
+export type SessionType = 'local' | 'ssh';
+
 export interface TerminalSession {
   id: string;
+  type: SessionType;
   pid: number;
   createdAt: Date;
   cwd: string;
   shell: string;
+  sshInfo?: {
+    host: string;
+    port: number;
+    username: string;
+    status: SSHConnectionStatus;
+    hostId?: string;
+  };
 }
 
 export interface TerminalOptions {
@@ -13,6 +23,47 @@ export interface TerminalOptions {
   cwd?: string;
   shell?: string;
   env?: Record<string, string>;
+}
+
+// SSH 相关类型
+export type SSHAuthMethod = 'password' | 'privateKey';
+export type SSHConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+
+export interface SSHHostConfig {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  authMethod: SSHAuthMethod;
+  privateKeyPath?: string;
+  passphrase?: string;
+  password?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SSHConnectOptions {
+  hostId?: string;
+  host: string;
+  port: number;
+  username: string;
+  authMethod: SSHAuthMethod;
+  password?: string;
+  privateKeyPath?: string;
+  passphrase?: string;
+  cols?: number;
+  rows?: number;
+}
+
+export interface SSHSession {
+  id: string;
+  hostId?: string;
+  host: string;
+  port: number;
+  username: string;
+  status: SSHConnectionStatus;
+  connectedAt?: Date;
 }
 
 // AI 相关类型

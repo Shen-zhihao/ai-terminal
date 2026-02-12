@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTerminalStore } from "../../stores/terminal-store";
+import { useSSHStore } from "../../stores/ssh-store";
 import TerminalTabs from "./TerminalTabs";
 import TerminalView from "./TerminalView";
+import SSHModal from "../SSH/SSHModal";
+import type { SSHConnectOptions, TerminalSession } from "@shared/types";
 import "./TerminalArea.less";
 
 export default function TerminalArea() {
@@ -13,6 +16,7 @@ export default function TerminalArea() {
     setActiveSession,
   } = useTerminalStore();
 
+  const { isSSHModalOpen, setSSHModalOpen } = useSSHStore();
   const isCreatingRef = useRef(false);
 
   const createSession = useCallback(async () => {
@@ -35,16 +39,49 @@ export default function TerminalArea() {
     }
   }, [addSession, setActiveSession]);
 
+  const createSSHSession = useCallback(
+    async (options: SSHConnectOptions) => {
+      const response = await window.electronAPI.ssh.connect(options);
+      if (response.success && response.data) {
+        const sshSession: TerminalSession = {
+          id: response.data.id,
+          type: "ssh",
+          pid: 0,
+          createdAt: new Date(),
+          cwd: `${options.username}@${options.host}:${options.port}`,
+          shell: "ssh",
+          sshInfo: {
+            host: options.host,
+            port: options.port,
+            username: options.username,
+            status: "connected",
+            hostId: options.hostId,
+          },
+        };
+        addSession(sshSession);
+        setActiveSession(sshSession.id);
+      } else {
+        throw new Error(response.error || "SSH 连接失败");
+      }
+    },
+    [addSession, setActiveSession],
+  );
+
   const openNewWindow = useCallback(async () => {
     await window.electronAPI.shell.openNewWindow();
   }, []);
 
   const handleCloseSession = useCallback(
     async (sessionId: string) => {
-      await window.electronAPI.terminal.destroy(sessionId);
+      const session = sessions.find((s) => s.id === sessionId);
+      if (session?.type === "ssh") {
+        await window.electronAPI.ssh.disconnect(sessionId);
+      } else {
+        await window.electronAPI.terminal.destroy(sessionId);
+      }
       removeSession(sessionId);
     },
-    [removeSession],
+    [sessions, removeSession],
   );
 
   useEffect(() => {
@@ -62,18 +99,23 @@ export default function TerminalArea() {
         alert("垂直分屏功能开发中...");
       },
     );
-    const cleanupSplitHorizontal = window.electronAPI.shell.onSplitHorizontal(
-      () => {
+    const cleanupSplitHorizontal =
+      window.electronAPI.shell.onSplitHorizontal(() => {
         alert("水平分屏功能开发中...");
-      },
-    );
+      });
+
+    // 监听菜单中的 SSH 打开事件
+    const cleanupSSHModal = window.electronAPI.ssh.onOpenModal(() => {
+      setSSHModalOpen(true);
+    });
 
     return () => {
       cleanupNewTab();
       cleanupSplitVertical();
       cleanupSplitHorizontal();
+      cleanupSSHModal();
     };
-  }, [createSession]);
+  }, [createSession, setSSHModalOpen]);
 
   return (
     <div className="terminal-area-container">
@@ -99,6 +141,13 @@ export default function TerminalArea() {
           </div>
         ))}
       </div>
+
+      {isSSHModalOpen && (
+        <SSHModal
+          onClose={() => setSSHModalOpen(false)}
+          onConnect={createSSHSession}
+        />
+      )}
     </div>
   );
 }

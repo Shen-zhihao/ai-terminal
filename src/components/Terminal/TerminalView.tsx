@@ -3,8 +3,9 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
-import type { TerminalSession } from "@shared/types";
+import type { TerminalSession, SSHConnectionStatus } from "@shared/types";
 import { useSettingsStore } from "../../stores/settings-store";
+import { useTerminalStore } from "../../stores/terminal-store";
 
 interface TerminalViewProps {
   session: TerminalSession;
@@ -17,6 +18,7 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
   const fitAddonRef = useRef<FitAddon | null>(null);
 
   const fontSize = useSettingsStore((state) => state.fontSize);
+  const isSSH = session.type === "ssh";
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -58,32 +60,62 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
     xtermRef.current = xterm;
     fitAddonRef.current = fitAddon;
 
+    // 根据会话类型选择 API
+    const api = isSSH ? window.electronAPI.ssh : window.electronAPI.terminal;
+
     const disposable = xterm.onData((data) => {
-      window.electronAPI.terminal.write(session.id, data);
+      api.write(session.id, data);
     });
 
-    const unsubscribeData = window.electronAPI.terminal.onData(
-      (sessionId, data) => {
-        if (sessionId === session.id) {
-          xterm.write(data);
-        }
-      },
-    );
+    const unsubscribeData = api.onData((sessionId, data) => {
+      if (sessionId === session.id) {
+        xterm.write(data);
+      }
+    });
 
-    const unsubscribeExit = window.electronAPI.terminal.onExit(
-      (sessionId, exitCode) => {
+    let unsubscribeExit: (() => void) | undefined;
+    let unsubscribeStatus: (() => void) | undefined;
+
+    if (isSSH) {
+      unsubscribeExit = window.electronAPI.ssh.onExit((sessionId) => {
         if (sessionId === session.id) {
-          xterm.writeln(`\n\x1b[33m进程已退出，退出码：${exitCode}\x1b[0m`);
+          xterm.writeln("\n\x1b[33mSSH 连接已关闭\x1b[0m");
         }
-      },
-    );
+      });
+
+      unsubscribeStatus = window.electronAPI.ssh.onStatus(
+        (sessionId, status, error) => {
+          if (sessionId === session.id) {
+            useTerminalStore.getState().updateSession(sessionId, {
+              sshInfo: {
+                ...session.sshInfo!,
+                status: status as SSHConnectionStatus,
+              },
+            });
+            if (status === "error" && error) {
+              xterm.writeln(`\n\x1b[31mSSH 错误: ${error}\x1b[0m`);
+            }
+          }
+        },
+      );
+    } else {
+      unsubscribeExit = window.electronAPI.terminal.onExit(
+        (sessionId, exitCode) => {
+          if (sessionId === session.id) {
+            xterm.writeln(
+              `\n\x1b[33m进程已退出，退出码：${exitCode}\x1b[0m`,
+            );
+          }
+        },
+      );
+    }
 
     const handleResize = () => {
       if (fitAddonRef.current) {
         try {
           fitAddonRef.current.fit();
           if (xtermRef.current) {
-            window.electronAPI.terminal.resize(
+            api.resize(
               session.id,
               xtermRef.current.cols,
               xtermRef.current.rows,
@@ -100,11 +132,12 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
     return () => {
       disposable.dispose();
       unsubscribeData();
-      unsubscribeExit();
+      unsubscribeExit?.();
+      unsubscribeStatus?.();
       window.removeEventListener("resize", handleResize);
       xterm.dispose();
     };
-  }, [session.id]);
+  }, [session.id, isSSH]);
 
   useEffect(() => {
     if (xtermRef.current) {
@@ -117,10 +150,11 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
 
   useEffect(() => {
     if (isActive && fitAddonRef.current && xtermRef.current) {
+      const api = isSSH ? window.electronAPI.ssh : window.electronAPI.terminal;
       const timer = setTimeout(() => {
         try {
           fitAddonRef.current?.fit();
-          window.electronAPI.terminal.resize(
+          api.resize(
             session.id,
             xtermRef.current!.cols,
             xtermRef.current!.rows,
@@ -132,7 +166,7 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [isActive, session.id]);
+  }, [isActive, session.id, isSSH]);
 
   return (
     <div className="terminal-container">

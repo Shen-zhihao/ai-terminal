@@ -96,6 +96,7 @@ export class TerminalManager {
 
       return {
         id: session.id,
+        type: 'local' as const,
         pid: session.pid,
         createdAt: session.createdAt,
         cwd: session.cwd,
@@ -148,6 +149,7 @@ export class TerminalManager {
 
     return {
       id: session.id,
+      type: 'local' as const,
       pid: session.pid,
       createdAt: session.createdAt,
       cwd: session.cwd,
@@ -158,6 +160,7 @@ export class TerminalManager {
   getAll(): TerminalSession[] {
     return Array.from(this.sessions.values()).map((session) => ({
       id: session.id,
+      type: 'local' as const,
       pid: session.pid,
       createdAt: session.createdAt,
       cwd: session.cwd,

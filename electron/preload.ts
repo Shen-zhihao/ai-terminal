@@ -4,6 +4,8 @@ import type {
   TerminalOptions,
   IPCResponse,
   CommandHistory,
+  SSHConnectOptions,
+  SSHHostConfig,
 } from "../shared/types";
 
 // 暴露 Electron API 到渲染进程
@@ -66,6 +68,73 @@ contextBridge.exposeInMainWorld("electronAPI", {
           IPC_CHANNELS.SHELL_SPLIT_HORIZONTAL,
           handler,
         );
+    },
+  },
+
+  // SSH 操作
+  ssh: {
+    connect: (options: SSHConnectOptions): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_CONNECT, options),
+
+    write: (sessionId: string, data: string): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_WRITE, sessionId, data),
+
+    resize: (
+      sessionId: string,
+      cols: number,
+      rows: number,
+    ): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_RESIZE, sessionId, cols, rows),
+
+    disconnect: (sessionId: string): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_DISCONNECT, sessionId),
+
+    onData: (callback: (sessionId: string, data: string) => void) => {
+      const handler = (_: any, sessionId: string, data: string) =>
+        callback(sessionId, data);
+      ipcRenderer.on(IPC_CHANNELS.SSH_DATA, handler);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.SSH_DATA, handler);
+    },
+
+    onStatus: (
+      callback: (sessionId: string, status: string, error?: string) => void,
+    ) => {
+      const handler = (
+        _: any,
+        sessionId: string,
+        status: string,
+        error?: string,
+      ) => callback(sessionId, status, error);
+      ipcRenderer.on(IPC_CHANNELS.SSH_STATUS, handler);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.SSH_STATUS, handler);
+    },
+
+    onExit: (callback: (sessionId: string) => void) => {
+      const handler = (_: any, sessionId: string) => callback(sessionId);
+      ipcRenderer.on(IPC_CHANNELS.SSH_EXIT, handler);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.SSH_EXIT, handler);
+    },
+
+    // 主机管理
+    getHosts: (): Promise<IPCResponse<SSHHostConfig[]>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_HOSTS_GET),
+
+    saveHost: (host: SSHHostConfig): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_HOST_SAVE, host),
+
+    deleteHost: (hostId: string): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_HOST_DELETE, hostId),
+
+    selectKeyFile: (): Promise<IPCResponse<string | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_SELECT_KEY_FILE),
+
+    onOpenModal: (callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on("ssh:open-modal", handler);
+      return () => ipcRenderer.removeListener("ssh:open-modal", handler);
     },
   },
 
@@ -132,6 +201,32 @@ declare global {
         get: () => Promise<IPCResponse<CommandHistory[]>>;
         add: (entry: CommandHistory) => Promise<IPCResponse>;
         clear: () => Promise<IPCResponse>;
+      };
+      ssh: {
+        connect: (options: SSHConnectOptions) => Promise<IPCResponse>;
+        write: (sessionId: string, data: string) => Promise<IPCResponse>;
+        resize: (
+          sessionId: string,
+          cols: number,
+          rows: number,
+        ) => Promise<IPCResponse>;
+        disconnect: (sessionId: string) => Promise<IPCResponse>;
+        onData: (
+          callback: (sessionId: string, data: string) => void,
+        ) => () => void;
+        onStatus: (
+          callback: (
+            sessionId: string,
+            status: string,
+            error?: string,
+          ) => void,
+        ) => () => void;
+        onExit: (callback: (sessionId: string) => void) => () => void;
+        getHosts: () => Promise<IPCResponse<SSHHostConfig[]>>;
+        saveHost: (host: SSHHostConfig) => Promise<IPCResponse>;
+        deleteHost: (hostId: string) => Promise<IPCResponse>;
+        selectKeyFile: () => Promise<IPCResponse<string | null>>;
+        onOpenModal: (callback: () => void) => () => void;
       };
       shell: {
         openNewWindow: () => Promise<IPCResponse>;
