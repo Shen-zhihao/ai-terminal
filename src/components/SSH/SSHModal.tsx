@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSSHStore } from "../../stores/ssh-store";
+import { useSSHStore } from "@/stores/ssh-store";
 import SSHHostList from "./SSHHostList";
 import SSHConnectForm from "./SSHConnectForm";
 import type { SSHConnectOptions } from "@shared/types";

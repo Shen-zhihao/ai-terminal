@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { useChatStore } from "../../stores/chat-store";
-import { useSettingsStore } from "../../stores/settings-store";
-import { getAIService } from "../../services/ai-service";
+import { useChatStore } from "@/stores/chat-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { getAIService } from "@/services/ai-service";
 import ChatMessage from "./ChatMessage";
 import CommandSuggestion from "./CommandSuggestion";
 import "./ChatPanel.less";

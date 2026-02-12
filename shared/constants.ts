@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 // IPC 通道名称
 export const IPC_CHANNELS = {
   // 终端操作

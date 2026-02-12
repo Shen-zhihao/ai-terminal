@@ -4,8 +4,8 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
 import type { TerminalSession, SSHConnectionStatus } from "@shared/types";
-import { useSettingsStore } from "../../stores/settings-store";
-import { useTerminalStore } from "../../stores/terminal-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { useTerminalStore } from "@/stores/terminal-store";
 
 interface TerminalViewProps {
   session: TerminalSession;
@@ -96,7 +96,7 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
               xterm.writeln(`\n\x1b[31mSSH 错误: ${error}\x1b[0m`);
             }
           }
-        },
+        }
       );
     } else {
       unsubscribeExit = window.electronAPI.terminal.onExit(
@@ -104,7 +104,7 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
           if (sessionId === session.id) {
             xterm.writeln(`\n\x1b[33m进程已退出，退出码：${exitCode}\x1b[0m`);
           }
-        },
+        }
       );
     }
 
@@ -116,7 +116,7 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
             api.resize(
               session.id,
               xtermRef.current.cols,
-              xtermRef.current.rows,
+              xtermRef.current.rows
             );
           }
         } catch (e) {
@@ -155,7 +155,7 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
           api.resize(
             session.id,
             xtermRef.current!.cols,
-            xtermRef.current!.rows,
+            xtermRef.current!.rows
           );
           xtermRef.current?.focus();
         } catch (e) {

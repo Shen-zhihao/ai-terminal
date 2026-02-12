@@ -1,11 +1,11 @@
-import type { SSHHostConfig } from '@shared/types'
-import { useSSHStore } from '../../stores/ssh-store'
+import type { SSHHostConfig } from "@shared/types";
+import { useSSHStore } from "@/stores/ssh-store";
 
 interface SSHHostListProps {
-  hosts: SSHHostConfig[]
-  selectedId?: string
-  onSelect: (host: SSHHostConfig) => void
-  onNew: () => void
+  hosts: SSHHostConfig[];
+  selectedId?: string;
+  onSelect: (host: SSHHostConfig) => void;
+  onNew: () => void;
 }
 
 export default function SSHHostList({
@@ -14,14 +14,14 @@ export default function SSHHostList({
   onSelect,
   onNew,
 }: SSHHostListProps) {
-  const { deleteHost } = useSSHStore()
+  const { deleteHost } = useSSHStore();
 
   const handleDelete = async (e: React.MouseEvent, hostId: string) => {
-    e.stopPropagation()
-    if (confirm('确定删除此主机配置？')) {
-      await deleteHost(hostId)
+    e.stopPropagation();
+    if (confirm("确定删除此主机配置？")) {
+      await deleteHost(hostId);
     }
-  }
+  };
 
   return (
     <div className="ssh-host-list">
@@ -35,7 +35,9 @@ export default function SSHHostList({
         {hosts.map((host) => (
           <div
             key={host.id}
-            className={`ssh-host-item ${host.id === selectedId ? 'active' : ''}`}
+            className={`ssh-host-item ${
+              host.id === selectedId ? "active" : ""
+            }`}
             onClick={() => onSelect(host)}
           >
             <div className="ssh-host-item-info">
@@ -58,5 +60,5 @@ export default function SSHHostList({
         )}
       </div>
     </div>
-  )
+  );
 }

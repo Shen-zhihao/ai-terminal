@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useTerminalStore } from "../../stores/terminal-store";
-import { useSSHStore } from "../../stores/ssh-store";
+import { useTerminalStore } from "@/stores/terminal-store";
+import { useSSHStore } from "@/stores/ssh-store";
 import TerminalTabs from "./TerminalTabs";
 import TerminalView from "./TerminalView";
 import SSHModal from "../SSH/SSHModal";
@@ -64,7 +64,7 @@ export default function TerminalArea() {
         throw new Error(response.error || "SSH 连接失败");
       }
     },
-    [addSession, setActiveSession],
+    [addSession, setActiveSession]
   );
 
   const openNewWindow = useCallback(async () => {
@@ -81,7 +81,7 @@ export default function TerminalArea() {
       }
       removeSession(sessionId);
     },
-    [sessions, removeSession],
+    [sessions, removeSession]
   );
 
   useEffect(() => {
@@ -97,12 +97,13 @@ export default function TerminalArea() {
     const cleanupSplitVertical = window.electronAPI.shell.onSplitVertical(
       () => {
         alert("垂直分屏功能开发中...");
-      },
+      }
     );
-    const cleanupSplitHorizontal =
-      window.electronAPI.shell.onSplitHorizontal(() => {
+    const cleanupSplitHorizontal = window.electronAPI.shell.onSplitHorizontal(
+      () => {
         alert("水平分屏功能开发中...");
-      });
+      }
+    );
 
     // 监听菜单中的 SSH 打开事件
     const cleanupSSHModal = window.electronAPI.ssh.onOpenModal(() => {

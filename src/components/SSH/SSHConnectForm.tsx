@@ -1,11 +1,15 @@
-import { useState, useEffect } from 'react'
-import type { SSHHostConfig, SSHConnectOptions, SSHAuthMethod } from '@shared/types'
-import { useSSHStore } from '../../stores/ssh-store'
+import { useState, useEffect } from "react";
+import type {
+  SSHHostConfig,
+  SSHConnectOptions,
+  SSHAuthMethod,
+} from "@shared/types";
+import { useSSHStore } from "@/stores/ssh-store";
 
 interface SSHConnectFormProps {
-  host: SSHHostConfig | null
-  onConnect: (options: SSHConnectOptions) => Promise<void>
-  isConnecting: boolean
+  host: SSHHostConfig | null;
+  onConnect: (options: SSHConnectOptions) => Promise<void>;
+  isConnecting: boolean;
 }
 
 export default function SSHConnectForm({
@@ -13,53 +17,53 @@ export default function SSHConnectForm({
   onConnect,
   isConnecting,
 }: SSHConnectFormProps) {
-  const { saveHost } = useSSHStore()
+  const { saveHost } = useSSHStore();
 
-  const [name, setName] = useState('')
-  const [hostname, setHostname] = useState('')
-  const [port, setPort] = useState(22)
-  const [username, setUsername] = useState('')
-  const [authMethod, setAuthMethod] = useState<SSHAuthMethod>('password')
-  const [password, setPassword] = useState('')
-  const [privateKeyPath, setPrivateKeyPath] = useState('')
-  const [passphrase, setPassphrase] = useState('')
-  const [savePassword, setSavePassword] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [name, setName] = useState("");
+  const [hostname, setHostname] = useState("");
+  const [port, setPort] = useState(22);
+  const [username, setUsername] = useState("");
+  const [authMethod, setAuthMethod] = useState<SSHAuthMethod>("password");
+  const [password, setPassword] = useState("");
+  const [privateKeyPath, setPrivateKeyPath] = useState("");
+  const [passphrase, setPassphrase] = useState("");
+  const [savePassword, setSavePassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (host) {
-      setName(host.name)
-      setHostname(host.host)
-      setPort(host.port)
-      setUsername(host.username)
-      setAuthMethod(host.authMethod)
-      setPassword(host.password || '')
-      setPrivateKeyPath(host.privateKeyPath || '')
-      setPassphrase(host.passphrase || '')
-      setSavePassword(!!host.password || !!host.passphrase)
+      setName(host.name);
+      setHostname(host.host);
+      setPort(host.port);
+      setUsername(host.username);
+      setAuthMethod(host.authMethod);
+      setPassword(host.password || "");
+      setPrivateKeyPath(host.privateKeyPath || "");
+      setPassphrase(host.passphrase || "");
+      setSavePassword(!!host.password || !!host.passphrase);
     } else {
-      setName('')
-      setHostname('')
-      setPort(22)
-      setUsername('')
-      setAuthMethod('password')
-      setPassword('')
-      setPrivateKeyPath('')
-      setPassphrase('')
-      setSavePassword(false)
+      setName("");
+      setHostname("");
+      setPort(22);
+      setUsername("");
+      setAuthMethod("password");
+      setPassword("");
+      setPrivateKeyPath("");
+      setPassphrase("");
+      setSavePassword(false);
     }
-  }, [host])
+  }, [host]);
 
   const handleSelectKeyFile = async () => {
-    const response = await window.electronAPI.ssh.selectKeyFile()
+    const response = await window.electronAPI.ssh.selectKeyFile();
     if (response.success && response.data) {
-      setPrivateKeyPath(response.data)
+      setPrivateKeyPath(response.data);
     }
-  }
+  };
 
   const handleSave = async () => {
-    if (!hostname || !username) return
-    setIsSaving(true)
+    if (!hostname || !username) return;
+    setIsSaving(true);
     try {
       const hostConfig: SSHHostConfig = {
         id: host?.id || crypto.randomUUID(),
@@ -68,21 +72,22 @@ export default function SSHConnectForm({
         port,
         username,
         authMethod,
-        privateKeyPath: authMethod === 'privateKey' ? privateKeyPath : undefined,
+        privateKeyPath:
+          authMethod === "privateKey" ? privateKeyPath : undefined,
         passphrase:
-          authMethod === 'privateKey' && savePassword ? passphrase : undefined,
+          authMethod === "privateKey" && savePassword ? passphrase : undefined,
         password:
-          authMethod === 'password' && savePassword ? password : undefined,
+          authMethod === "password" && savePassword ? password : undefined,
         createdAt: host?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      }
-      await saveHost(hostConfig)
+      };
+      await saveHost(hostConfig);
     } catch (error: any) {
-      alert(`保存失败: ${error.message}`)
+      alert(`保存失败: ${error.message}`);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleConnect = async () => {
     const options: SSHConnectOptions = {
@@ -91,16 +96,16 @@ export default function SSHConnectForm({
       port,
       username,
       authMethod,
-      password: authMethod === 'password' ? password : undefined,
-      privateKeyPath: authMethod === 'privateKey' ? privateKeyPath : undefined,
-      passphrase: authMethod === 'privateKey' ? passphrase : undefined,
+      password: authMethod === "password" ? password : undefined,
+      privateKeyPath: authMethod === "privateKey" ? privateKeyPath : undefined,
+      passphrase: authMethod === "privateKey" ? passphrase : undefined,
       cols: 80,
       rows: 24,
-    }
-    await onConnect(options)
-  }
+    };
+    await onConnect(options);
+  };
 
-  const canConnect = hostname.trim() !== '' && username.trim() !== ''
+  const canConnect = hostname.trim() !== "" && username.trim() !== "";
 
   return (
     <div className="ssh-connect-form">
@@ -154,7 +159,7 @@ export default function SSHConnectForm({
         </select>
       </div>
 
-      {authMethod === 'password' && (
+      {authMethod === "password" && (
         <div className="form-group">
           <label>密码</label>
           <input
@@ -166,7 +171,7 @@ export default function SSHConnectForm({
         </div>
       )}
 
-      {authMethod === 'privateKey' && (
+      {authMethod === "privateKey" && (
         <>
           <div className="form-group">
             <label>私钥文件</label>
@@ -216,16 +221,16 @@ export default function SSHConnectForm({
           onClick={handleSave}
           disabled={!canConnect || isSaving}
         >
-          {isSaving ? '保存中...' : '保存主机'}
+          {isSaving ? "保存中..." : "保存主机"}
         </button>
         <button
           className="btn-save"
           onClick={handleConnect}
           disabled={isConnecting || !canConnect}
         >
-          {isConnecting ? '连接中...' : '连接'}
+          {isConnecting ? "连接中..." : "连接"}
         </button>
       </div>
     </div>
-  )
+  );
 }

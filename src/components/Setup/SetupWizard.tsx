@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { AIProvider } from "@shared/types";
-import { useSettingsStore } from "../../stores/settings-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import "./SetupWizard.less";
 
 interface SetupWizardProps {

@@ -10,7 +10,8 @@
     "lib": ["ES2020"],
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": ["electron", "shared"]
 }

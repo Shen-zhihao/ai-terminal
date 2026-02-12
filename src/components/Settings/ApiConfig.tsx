@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSettingsStore } from "../../stores/settings-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { AIProvider } from "@shared/types";
 import "./SettingsModal.less";
 

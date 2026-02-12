@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { CommandSuggestion as CommandSuggestionType } from "@shared/types";
-import { useTerminalStore } from "../../stores/terminal-store";
+import { useTerminalStore } from "@/stores/terminal-store";
 
 const RISK_LABELS: Record<string, string> = {
   safe: "安全",
@@ -51,7 +51,7 @@ export default function CommandSuggestion({
     const confirmed =
       suggestion.riskLevel === "dangerous"
         ? window.confirm(
-            `此命令可能存在危险：\n\n${editedCommand}\n\n确定要执行吗？`,
+            `此命令可能存在危险：\n\n${editedCommand}\n\n确定要执行吗？`
           )
         : true;
 
