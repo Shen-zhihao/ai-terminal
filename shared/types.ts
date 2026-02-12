@@ -1,5 +1,5 @@
 // 终端相关类型
-export type SessionType = 'local' | 'ssh';
+export type SessionType = "local" | "ssh";
 
 export interface TerminalSession {
   id: string;
@@ -26,8 +26,12 @@ export interface TerminalOptions {
 }
 
 // SSH 相关类型
-export type SSHAuthMethod = 'password' | 'privateKey';
-export type SSHConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+export type SSHAuthMethod = "password" | "privateKey";
+export type SSHConnectionStatus =
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "error";
 
 export interface SSHHostConfig {
   id: string;
@@ -68,6 +72,7 @@ export interface SSHSession {
 
 // AI 相关类型
 export interface AIProvider {
+  id?: string;
   name: string;
   type:
     | "openai"
@@ -124,6 +129,7 @@ export interface CommandHistory {
 // 配置类型
 export interface AppConfig {
   aiProvider: AIProvider;
+  aiProviderConfigs?: AIProvider[];
   isSetupCompleted?: boolean;
   terminal: {
     fontSize: number;

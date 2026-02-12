@@ -59,6 +59,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
     try {
       // 设置空配置表示跳过 AI 配置
       const emptyConfig: AIProvider = {
+        id: self.crypto.randomUUID(),
         name: "普通终端",
         type: "custom", // 使用 custom 类型但不设置有效的 API key
         apiKey: "",
@@ -89,6 +90,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
 
     try {
       const config: AIProvider = {
+        id: self.crypto.randomUUID(),
         name: selectedProvider.name,
         type: selectedProvider.type,
         apiKey: apiKey.trim(),

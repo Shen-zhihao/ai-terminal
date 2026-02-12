@@ -115,6 +115,34 @@ export class ConfigManager {
       }
     }
 
+    // 处理多配置列表
+    if (!this.config?.aiProviderConfigs) {
+      // 如果没有配置列表，将当前配置作为第一个配置
+      mergedConfig.aiProviderConfigs = [{ ...mergedConfig.aiProvider }];
+      // 确保有 ID
+      if (!mergedConfig.aiProviderConfigs[0].id) {
+        mergedConfig.aiProviderConfigs[0].id = "default";
+      }
+      if (!mergedConfig.aiProvider.id) {
+        mergedConfig.aiProvider.id = "default";
+      }
+    } else {
+      mergedConfig.aiProviderConfigs = this.config.aiProviderConfigs.map(
+        (config) => {
+          const decryptedConfig = { ...config };
+          if (decryptedConfig.apiKey && safeStorage.isEncryptionAvailable()) {
+            try {
+              const buffer = Buffer.from(decryptedConfig.apiKey, "base64");
+              decryptedConfig.apiKey = safeStorage.decryptString(buffer);
+            } catch (error) {
+              // 保持原值
+            }
+          }
+          return decryptedConfig;
+        },
+      );
+    }
+
     return mergedConfig;
   }
 
@@ -129,6 +157,22 @@ export class ConfigManager {
       }
     }
 
+    // 加密配置列表中的 API Key
+    if (config.aiProviderConfigs && safeStorage.isEncryptionAvailable()) {
+      config.aiProviderConfigs = config.aiProviderConfigs.map((c) => {
+        const encryptedConfig = { ...c };
+        if (encryptedConfig.apiKey) {
+          try {
+            const encrypted = safeStorage.encryptString(encryptedConfig.apiKey);
+            encryptedConfig.apiKey = encrypted.toString("base64");
+          } catch (error) {
+            console.warn("Failed to encrypt API key in list:", error);
+          }
+        }
+        return encryptedConfig;
+      });
+    }
+
     // 深度合并配置
     this.config = {
       ...this.config,
@@ -137,6 +181,8 @@ export class ConfigManager {
         ...this.config?.aiProvider,
         ...config.aiProvider,
       } as any,
+      aiProviderConfigs:
+        config.aiProviderConfigs || this.config?.aiProviderConfigs,
       terminal: {
         ...this.config?.terminal,
         ...config.terminal,
