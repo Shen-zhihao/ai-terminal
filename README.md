@@ -77,19 +77,42 @@ pnpm dev
 >
 > **可选**：如果你希望通过环境变量配置（跳过向导），可以创建 `.env` 文件并设置 `VITE_API_KEY` 等变量。
 
-### 构建应用
+## 构建指南
+
+### 环境要求
+
+本项目基于 Electron 和 native 模块（如 node-pty），打包时需要注意以下系统环境要求：
+
+| 目标平台 | 编译环境要求 | 注意事项 |
+|---------|------------|----------|
+| **macOS** | macOS 10.15+ <br> Xcode Command Line Tools | 支持构建 DMG、ZIP。需注意 Apple Silicon (arm64) 和 Intel (x64) 架构区别。 |
+| **Windows** | Windows 10+ <br> Visual Studio Build Tools (C++ workload) | 支持构建 NSIS (exe)。建议在 Windows 环境下构建 Windows 包以避免兼容性问题。 |
+| **Linux** | Ubuntu 20.04+ / Debian 10+ <br> `build-essential`, `python3`, `libsecret-1-dev` 等 | 支持构建 AppImage, deb。推荐使用 Docker 或在 Linux 虚拟机中构建。 |
+
+> **提示**：由于使用了 `node-pty` 和 `ssh2` 等原生模块，跨平台构建（例如在 Mac 上构建 Windows 包）可能会遇到原生依赖编译问题。推荐在对应目标平台上进行构建，或使用 CI/CD (GitHub Actions) 进行多平台构建。
+
+### 构建命令
+
+项目提供了针对不同平台的快捷构建命令：
 
 ```bash
+# 构建当前系统对应的包（自动识别）
 pnpm build
+
+# 构建 Windows 安装包 (.exe)
+# 推荐在 Windows 环境下运行
+pnpm build:win
+
+# 构建 macOS 安装包 (.dmg)
+# 必须在 macOS 环境下运行
+pnpm build:mac
+
+# 构建 Linux 安装包 (.AppImage, .deb)
+# 推荐在 Linux 环境下运行
+pnpm build:linux
 ```
 
-### 打包应用
-
-```bash
-pnpm electron:package
-```
-
-打包后的应用将输出到 `release/` 目录。
+打包后的应用文件将输出到 `release/` 目录。
 
 ## 使用指南
 
