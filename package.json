@@ -1,16 +1,17 @@
 {
   "name": "ai-terminal",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "AI-powered terminal with natural language command interface",
   "main": "dist-electron/main.js",
   "author": "szh19970123@icloud.com",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder && pnpm cleanup",
-    "build:win": "tsc && vite build && electron-builder --win --x64 && pnpm cleanup",
-    "build:mac": "tsc && vite build && electron-builder --mac && pnpm cleanup",
-    "build:linux": "tsc && vite build && electron-builder --linux && pnpm cleanup",
+    "build": "tsc && vite build && electron-builder && pnpm cleanup && pnpm clean:release",
+    "build:win": "tsc && vite build && electron-builder --win --x64 && pnpm cleanup && pnpm clean:release",
+    "build:mac": "tsc && vite build && electron-builder --mac && pnpm cleanup && pnpm clean:release",
+    "build:linux": "tsc && vite build && electron-builder --linux && pnpm cleanup && pnpm clean:release",
     "cleanup": "rm -rf dist dist-electron",
+    "clean:release": "node scripts/clean-release.js",
     "preview": "vite preview",
     "electron:dev": "vite",
     "electron:build": "tsc && vite build",
@@ -24,7 +25,10 @@
     "terminal",
     "electron",
     "ai",
-    "shell"
+    "shell",
+    "natural language",
+    "ai assistant",
+    "ssh"
   ],
   "license": "MIT",
   "dependencies": {
