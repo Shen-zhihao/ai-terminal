@@ -1,9 +1,14 @@
-@import '../../index.less';
+@import "../../index.less";
 
 .setup-wizard {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, @gradient-start 0%, @gradient-via 50%, @gradient-end 100%);
+  background: linear-gradient(
+    135deg,
+    @gradient-start 0%,
+    @gradient-via 50%,
+    @gradient-end 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,7 +257,6 @@
 .config-actions {
   display: flex;
   gap: 0.75rem;
-  padding-top: 1.5rem;
 }
 
 .btn {

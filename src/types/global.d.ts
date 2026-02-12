@@ -39,16 +39,13 @@ declare global {
           callback: (sessionId: string, data: string) => void,
         ) => () => void;
         onStatus: (
-          callback: (
-            sessionId: string,
-            status: string,
-            error?: string,
-          ) => void,
+          callback: (sessionId: string, status: string, error?: string) => void,
         ) => () => void;
         onExit: (callback: (sessionId: string) => void) => () => void;
         getHosts: () => Promise<IPCResponse<SSHHostConfig[]>>;
         saveHost: (host: SSHHostConfig) => Promise<IPCResponse>;
         deleteHost: (hostId: string) => Promise<IPCResponse>;
+        clearHosts: () => Promise<IPCResponse>;
         selectKeyFile: () => Promise<IPCResponse<string | null>>;
         onOpenModal: (callback: () => void) => () => void;
       };
@@ -62,6 +59,7 @@ declare global {
         get: () => Promise<IPCResponse>;
         set: (config: unknown) => Promise<IPCResponse>;
         reset: () => Promise<IPCResponse>;
+        clearApiKeys: () => Promise<IPCResponse>;
       };
       history: {
         get: () => Promise<IPCResponse<CommandHistory[]>>;

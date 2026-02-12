@@ -201,6 +201,23 @@ export class ConfigManager {
     await this.save();
   }
 
+  async clearApiKeys(): Promise<void> {
+    if (this.config?.aiProvider) {
+      this.config.aiProvider.apiKey = "";
+    }
+
+    if (this.config?.aiProviderConfigs) {
+      this.config.aiProviderConfigs = this.config.aiProviderConfigs.map(
+        (c) => ({
+          ...c,
+          apiKey: "",
+        }),
+      );
+    }
+
+    await this.save();
+  }
+
   async getHistory(): Promise<CommandHistory[]> {
     return this.history;
   }
@@ -290,6 +307,11 @@ export class ConfigManager {
 
   async deleteSSHHost(hostId: string): Promise<void> {
     this.sshHosts = this.sshHosts.filter((h) => h.id !== hostId);
+    await this.saveSSHHostsFile();
+  }
+
+  async clearSSHHosts(): Promise<void> {
+    this.sshHosts = [];
     await this.saveSSHHostsFile();
   }
 }

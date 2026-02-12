@@ -93,8 +93,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
       const handler = (_: any, sessionId: string, data: string) =>
         callback(sessionId, data);
       ipcRenderer.on(IPC_CHANNELS.SSH_DATA, handler);
-      return () =>
-        ipcRenderer.removeListener(IPC_CHANNELS.SSH_DATA, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.SSH_DATA, handler);
     },
 
     onStatus: (
@@ -107,15 +106,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
         error?: string,
       ) => callback(sessionId, status, error);
       ipcRenderer.on(IPC_CHANNELS.SSH_STATUS, handler);
-      return () =>
-        ipcRenderer.removeListener(IPC_CHANNELS.SSH_STATUS, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.SSH_STATUS, handler);
     },
 
     onExit: (callback: (sessionId: string) => void) => {
       const handler = (_: any, sessionId: string) => callback(sessionId);
       ipcRenderer.on(IPC_CHANNELS.SSH_EXIT, handler);
-      return () =>
-        ipcRenderer.removeListener(IPC_CHANNELS.SSH_EXIT, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.SSH_EXIT, handler);
     },
 
     // 主机管理
@@ -127,6 +124,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     deleteHost: (hostId: string): Promise<IPCResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.SSH_HOST_DELETE, hostId),
+
+    clearHosts: (): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.SSH_HOSTS_CLEAR),
 
     selectKeyFile: (): Promise<IPCResponse<string | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.SSH_SELECT_KEY_FILE),
@@ -148,6 +148,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     reset: (): Promise<IPCResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.CONFIG_RESET),
+
+    clearApiKeys: (): Promise<IPCResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.CONFIG_CLEAR_API_KEYS),
   },
 
   // 历史记录
@@ -196,6 +199,7 @@ declare global {
         get: () => Promise<IPCResponse>;
         set: (config: any) => Promise<IPCResponse>;
         reset: () => Promise<IPCResponse>;
+        clearApiKeys: () => Promise<IPCResponse>;
       };
       history: {
         get: () => Promise<IPCResponse<CommandHistory[]>>;
@@ -215,16 +219,13 @@ declare global {
           callback: (sessionId: string, data: string) => void,
         ) => () => void;
         onStatus: (
-          callback: (
-            sessionId: string,
-            status: string,
-            error?: string,
-          ) => void,
+          callback: (sessionId: string, status: string, error?: string) => void,
         ) => () => void;
         onExit: (callback: (sessionId: string) => void) => () => void;
         getHosts: () => Promise<IPCResponse<SSHHostConfig[]>>;
         saveHost: (host: SSHHostConfig) => Promise<IPCResponse>;
         deleteHost: (hostId: string) => Promise<IPCResponse>;
+        clearHosts: () => Promise<IPCResponse>;
         selectKeyFile: () => Promise<IPCResponse<string | null>>;
         onOpenModal: (callback: () => void) => () => void;
       };

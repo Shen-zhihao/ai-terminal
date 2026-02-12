@@ -18,6 +18,7 @@ export const IPC_CHANNELS = {
   CONFIG_GET: "config:get",
   CONFIG_SET: "config:set",
   CONFIG_RESET: "config:reset",
+  CONFIG_CLEAR_API_KEYS: "config:clear-api-keys",
 
   // AI 操作
   AI_GENERATE_COMMAND: "ai:generate-command",
@@ -43,6 +44,7 @@ export const IPC_CHANNELS = {
   SSH_HOSTS_GET: "ssh:hosts-get",
   SSH_HOST_SAVE: "ssh:host-save",
   SSH_HOST_DELETE: "ssh:host-delete",
+  SSH_HOSTS_CLEAR: "ssh:hosts-clear",
   SSH_SELECT_KEY_FILE: "ssh:select-key-file",
 } as const;
 

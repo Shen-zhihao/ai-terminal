@@ -12,7 +12,12 @@ import { TerminalManager } from "./terminal-manager";
 import { SSHManager } from "./ssh-manager";
 import { ConfigManager } from "./config-manager";
 import { IPC_CHANNELS } from "../shared/constants";
-import type { IPCResponse, TerminalOptions, SSHConnectOptions, SSHHostConfig } from "../shared/types";
+import type {
+  IPCResponse,
+  TerminalOptions,
+  SSHConnectOptions,
+  SSHHostConfig,
+} from "../shared/types";
 
 // 禁用硬件加速（可选）
 // app.disableHardwareAcceleration()
@@ -41,9 +46,17 @@ function cleanupSessionsByWebContentsId(ownerId: number) {
 
   sessionIds.forEach((sessionId) => {
     // 尝试作为本地终端销毁
-    try { terminalManager?.destroy(sessionId); } catch { /* 非本地终端会话 */ }
+    try {
+      terminalManager?.destroy(sessionId);
+    } catch {
+      /* 非本地终端会话 */
+    }
     // 尝试作为 SSH 会话断开
-    try { sshManager?.disconnect(sessionId); } catch { /* 非 SSH 会话 */ }
+    try {
+      sshManager?.disconnect(sessionId);
+    } catch {
+      /* 非 SSH 会话 */
+    }
     sessionOwnerMap.delete(sessionId);
   });
 }
@@ -365,6 +378,19 @@ function setupIPC() {
     }
   });
 
+  ipcMain.handle(
+    IPC_CHANNELS.CONFIG_CLEAR_API_KEYS,
+    async (): Promise<IPCResponse> => {
+      try {
+        if (!configManager) throw new Error("Config manager not initialized");
+        await configManager.clearApiKeys();
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
   // 历史记录操作
   ipcMain.handle(IPC_CHANNELS.HISTORY_GET, async (): Promise<IPCResponse> => {
     try {
@@ -481,18 +507,15 @@ function setupIPC() {
   );
 
   // SSH 主机管理
-  ipcMain.handle(
-    IPC_CHANNELS.SSH_HOSTS_GET,
-    async (): Promise<IPCResponse> => {
-      try {
-        if (!configManager) throw new Error("Config manager not initialized");
-        const hosts = await configManager.getSSHHosts();
-        return { success: true, data: hosts };
-      } catch (error: any) {
-        return { success: false, error: error.message };
-      }
-    },
-  );
+  ipcMain.handle(IPC_CHANNELS.SSH_HOSTS_GET, async (): Promise<IPCResponse> => {
+    try {
+      if (!configManager) throw new Error("Config manager not initialized");
+      const hosts = await configManager.getSSHHosts();
+      return { success: true, data: hosts };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
 
   ipcMain.handle(
     IPC_CHANNELS.SSH_HOST_SAVE,
@@ -513,6 +536,19 @@ function setupIPC() {
       try {
         if (!configManager) throw new Error("Config manager not initialized");
         await configManager.deleteSSHHost(hostId);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.SSH_HOSTS_CLEAR,
+    async (): Promise<IPCResponse> => {
+      try {
+        if (!configManager) throw new Error("Config manager not initialized");
+        await configManager.clearSSHHosts();
         return { success: true };
       } catch (error: any) {
         return { success: false, error: error.message };
