@@ -18,6 +18,7 @@ export default function CommandSuggestion({
   const [isEditing, setIsEditing] = useState(false);
   const [editedCommand, setEditedCommand] = useState(suggestion.command);
   const activeSessionId = useTerminalStore((state) => state.activeSessionId);
+  const sessions = useTerminalStore((state) => state.sessions);
   const hasAutoExecuted = useRef(false);
 
   const getRiskIcon = (risk: string) => {
@@ -33,7 +34,15 @@ export default function CommandSuggestion({
 
   const executeCommand = async (cmd: string) => {
     if (!activeSessionId) return;
-    await window.electronAPI.terminal.write(activeSessionId, cmd + "\n");
+
+    const session = sessions.find((s) => s.id === activeSessionId);
+    if (!session) return;
+
+    if (session.type === "ssh") {
+      await window.electronAPI.ssh.write(activeSessionId, cmd + "\n");
+    } else {
+      await window.electronAPI.terminal.write(activeSessionId, cmd + "\n");
+    }
   };
 
   const handleExecute = async () => {

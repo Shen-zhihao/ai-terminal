@@ -28,8 +28,8 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
       fontSize,
       fontFamily: 'Monaco, Menlo, "Courier New", monospace',
       theme: {
-        background: "#000000",
-        foreground: "#ffffff",
+        background: "#000000", // 恢复纯黑背景，保持原有布局感
+        foreground: "#cccccc", // 结果颜色：淡灰色，与高亮命令（青色）区分
         cursor: "#ffffff",
         black: "#000000",
         red: "#ff5555",
@@ -102,9 +102,7 @@ export default function TerminalView({ session, isActive }: TerminalViewProps) {
       unsubscribeExit = window.electronAPI.terminal.onExit(
         (sessionId, exitCode) => {
           if (sessionId === session.id) {
-            xterm.writeln(
-              `\n\x1b[33m进程已退出，退出码：${exitCode}\x1b[0m`,
-            );
+            xterm.writeln(`\n\x1b[33m进程已退出，退出码：${exitCode}\x1b[0m`);
           }
         },
       );
